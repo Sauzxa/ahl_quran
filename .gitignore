@@ -2,3 +2,5 @@
 FrontStructure.md
 #files
 ./ahl_quran_backend/.env
+# vscode settings
+.vscode/
