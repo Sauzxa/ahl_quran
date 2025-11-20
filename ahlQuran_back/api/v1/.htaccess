@@ -1,0 +1,27 @@
+# Allow access to this directory
+<IfModule mod_authz_core.c>
+    Require all granted
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Allow from all
+</IfModule>
+
+# Allow following symbolic links
+Options +FollowSymLinks
+
+# Enable the rewrite engine
+RewriteEngine On
+
+# Handle OPTIONS requests for CORS preflight
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ index.php [L]
+
+# Check if the requested file does not exist
+RewriteCond %{REQUEST_FILENAME} !-f
+
+# Check if the requested directory does not exist
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Redirect all other requests to index.php with query string appended
+RewriteRule ^(.*)$ index.php [QSA,L]
