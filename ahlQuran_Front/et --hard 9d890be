@@ -1,0 +1,74 @@
+[33mc3beafe[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mhouda[m[33m, [m[1;31morigin/houda[m[33m)[m fix duplicate
+[33m9d890be[m Refactor: Update management screens to include duplication functionality and clean up unused imports
+[33mcf60fcf[m Replace onboarding screen with landing screen in app routes
+[33m5da42cf[m Refactor: Update import paths for achievement and exam records models
+[33md96e75a[m Add landing page
+[33mbad4682[m code files restructuring
+[33mb2f3a20[m improvements 1
+[33m19319b4[m remove duplicate files
+[33m171aca1[m remove extra submit logic
+[33mc0834fd[m Merge branch 'houda' of https://github.com/akhdari/The-Doctrine-of-the-People-of-the-Quran into houda
+[33m9c25317[m Resolve error in navigation drawer behavior
+[33m9eef3e7[m fix dialog
+[33m8abed28[m improve performance in dialogs
+[33m2e2083d[m fix imports
+[33m5194ecd[m merge with web
+[33mad0114e[m Implement pagination logic for attendance screen and student grid display
+[33m9d57955[m Merge branch 'houda' of https://github.com/akhdari/The-Doctrine-of-the-People-of-the-Quran into houda
+[33mc699657[m Add Excel export functionality to data grid
+[33m8972706[m fix dialgo errors
+[33m655d2d8[m Add pagination
+[33mde8d7c1[m Create time picker
+[33me20d964[m reorganize student dialog, custom_container and dialog UI
+[33m831840f[m Fix the error in the student dialog
+[33m07ed2a1[m code refactoring
+[33mbe139d2[m add custom search feild, starter
+[33m631b0f8[m Add onboarding flow, student card , charts, and reports
+[33mecc94e0[m management students / guardian /  lectures crud 100% managment exam
+[33mf101eab[m Add reports and charts
+[33mf1352b1[m Add attendance screen
+[33m9a45d25[m add the missing endpoints
+[33mabf17ed[m correct file path
+[33m60ea8cf[m add example for attendance handling with hardcoded data
+[33m3937d98[m Adding new models for each table adding db_client file
+[33m03889b6[m Add api endpoints class
+[33m51fbfe6[m - Add binding and routes - Add initial values handling for MultiSelect widget - Implement update functionality for lecture screen
+[33m4906b77[m refactor MultiSelect, remove unused fetch methods, add PUT support, and enable row data retrieval from data source
+[33mdddf534[m Before implementing "update" functionality
+[33m00ce0ed[m Get latest acheivemets of a student
+[33mc68c8f4[m finish status table
+[33m4fdfe69[m Remove _buildTableCell
+[33med9f756[m add controllers for screen and attendence table
+[33m2a7f54a[m before switch to controllers
+[33m8d8c407[m switch to syncfusion and organise file structure
+[33m8b5e8d6[m add and delete acheivement
+[33mfcf22ab[m try synfusion with gruadian data
+[33mf929515[m update connect class and form submition
+[33mfe39ff1[m add lecture
+[33m1e5d330[m add guardian
+[33ma48ea28[m add stuedent , done
+[33ma7ae57d[m sustumize multisearch, first successful put request
+[33m5a31b9d[m before editing validator
+[33mc4f36dd[m correct the validation logic
+[33m514a43d[m permission handelling
+[33mf47a58b[m password, username generation + multi pick
+[33m6d95d11[m add input feild file
+[33md9977a4[m before additing file 1 and 2
+[33m61bf360[m add dialog
+[33m56299f6[m simplify light/dark theme
+[33mea5af46[m first communication with the server, add light and dark themes
+[33m95bf5dd[m backend integration
+[33m4b81250[m  Create a reusable async data table
+[33m950d8ec[m implemet tables structure
+[33m51ca38a[m switch to pdf format
+[33m14e09bd[m add implementatin demo
+[33m3b1f807[m convert to md file
+[33m5bf4af1[m add link
+[33m5bfa3f8[m Create uml
+[33md21a22a[m add animation to footer
+[33me4840b5[m copy page layout
+[33m1cee278[m add copy page and the validation logic of of request copy page
+[33m5b3710f[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmaster[m[33m)[m Removed unnecessary folders
+[33m3ff9e19[m start implementation of login and request copy pages
+[33mce642a8[m Update README.md
+[33m4e621df[m Initial commit
