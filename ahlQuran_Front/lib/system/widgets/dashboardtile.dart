@@ -6,6 +6,7 @@ class DashboardTileConfig {
   final IconData icon;
   final IconData bigIcon;
   final Widget Function() page;
+  final String? count;
   final bool isWide;
 
   DashboardTileConfig({
@@ -13,6 +14,7 @@ class DashboardTileConfig {
     required this.icon,
     required this.bigIcon,
     required this.page,
+    this.count,
     this.isWide = false,
   });
 }
@@ -98,12 +100,26 @@ class _DashboardTileState extends State<DashboardTile> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Text(
-                          widget.config.label,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: onColor,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              widget.config.label,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: onColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (widget.config.count != null)
+                              Text(
+                                widget.config.count!,
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  color: onColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                          ],
                         ),
                         const SizedBox(width: 12),
                         Icon(

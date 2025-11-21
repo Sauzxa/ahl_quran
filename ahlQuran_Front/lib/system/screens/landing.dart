@@ -4,79 +4,91 @@ import 'package:flutter/material.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/dashboardtile.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/header.dart';
 import './base_layout.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/student_managment.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_teachers.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/guardian_managment.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/lecture_managment.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/attendance/attendance.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_records.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/screens/report1_screen.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/stats/stat1.dart';
 
 final List<DashboardTileConfig> tiles = [
   DashboardTileConfig(
     label: 'الطلاب',
+    count: '59',
     icon: Icons.people,
     bigIcon: Icons.people,
-    page: () => const Placeholder(),
+    page: () => const AddStudent(),
   ),
   DashboardTileConfig(
     label: 'المعلمين',
+    count: '13',
     icon: Icons.people_outline,
     bigIcon: Icons.people_outline,
-    page: () => const Placeholder(),
+    page: () => const ExamTeachers(),
+  ),
+  DashboardTileConfig(
+    label: 'الحلقات',
+    count: '18',
+    icon: Icons.list,
+    bigIcon: Icons.list_alt,
+    page: () => const AddLecture(),
   ),
   DashboardTileConfig(
     label: 'أولياء الأمور',
+    count: '13',
     icon: Icons.person,
     bigIcon: Icons.person,
-    page: () => const Placeholder(),
+    page: () => const AddGuardian(),
   ),
   DashboardTileConfig(
-    label: 'الحفظ والمراجعة',
-    icon: Icons.check_box,
-    bigIcon: Icons.check_box_outlined,
-    page: () => const Placeholder(),
-  ),
-  DashboardTileConfig(
-    label: 'الحصص',
-    icon: Icons.list,
-    bigIcon: Icons.list_alt,
-    page: () => const Placeholder(),
-  ),
-  DashboardTileConfig(
-    label: 'الحضور الطلاب',
+    label: 'حضور الطلاب',
     icon: Icons.event_available,
     bigIcon: Icons.event_available,
-    page: () => const Placeholder(),
+    page: () => AttendanceScreen(),
   ),
   DashboardTileConfig(
     label: 'حضور المعلمين',
     icon: Icons.event,
     bigIcon: Icons.event,
-    page: () => const SizedBox.shrink(),
+    page: () => const SizedBox.shrink(), // Placeholder
   ),
   DashboardTileConfig(
     label: 'حضور الموظفين',
     icon: Icons.event_note,
     bigIcon: Icons.event_note,
-    page: () => const SizedBox.shrink(),
+    page: () => const SizedBox.shrink(), // Placeholder
+  ),
+  DashboardTileConfig(
+    label: 'الحفظ والمراجعة',
+    icon: Icons.check_box,
+    bigIcon: Icons.check_box_outlined,
+    page: () => const ExamRecords(),
   ),
   DashboardTileConfig(
     label: 'التقارير',
     icon: Icons.description,
     bigIcon: Icons.description_outlined,
-    page: () => const SizedBox.shrink(),
+    page: () => Report1Screen(),
   ),
   DashboardTileConfig(
     label: 'الإحصاءات',
     icon: Icons.bar_chart,
     bigIcon: Icons.bar_chart_outlined,
-    page: () => const SizedBox.shrink(),
+    page: () => StudentProgressChartScreen(),
   ),
   DashboardTileConfig(
-    label: 'التخطيط والمقررات',
+    label: 'الخطط والمقررات',
     icon: Icons.menu_book,
     bigIcon: Icons.menu_book_outlined,
-    page: () => const SizedBox.shrink(),
+    page: () => const SizedBox.shrink(), // Placeholder
   ),
   DashboardTileConfig(
     label: 'الامتحانات (قريباً)',
     icon: Icons.check_circle,
     bigIcon: Icons.check_circle_outline,
-    page: () => const SizedBox.shrink(),
+    page: () => const SizedBox.shrink(), // Placeholder
   ),
 ];
 

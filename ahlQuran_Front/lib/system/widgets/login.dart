@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../routes/app_routes.dart';
+import '../../controllers/auth_controller.dart';
 import './auth_layout.dart';
 
 class LogIn extends StatelessWidget {
@@ -11,6 +12,7 @@ class LogIn extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final iconTheme = Theme.of(context).iconTheme;
+    final authController = Get.find<AuthController>();
 
     return AuthLayout(
       child: Column(
@@ -30,6 +32,7 @@ class LogIn extends StatelessWidget {
           Text("اسم المستخدم", style: textTheme.bodyMedium),
           const SizedBox(height: 4),
           TextField(
+            controller: authController.usernameController,
             decoration: InputDecoration(
               hintText: "ادخل اسم المستخدم",
               prefixIcon: Icon(Icons.email_outlined, color: iconTheme.color),
@@ -42,6 +45,7 @@ class LogIn extends StatelessWidget {
           Text("كلمة المرور", style: textTheme.bodyMedium),
           const SizedBox(height: 4),
           TextField(
+            controller: authController.passwordController,
             obscureText: true,
             decoration: InputDecoration(
               hintText: "ادخل كلمة المرور",
@@ -51,6 +55,30 @@ class LogIn extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 16),
+          Text("نوع الحساب", style: textTheme.bodyMedium),
+          const SizedBox(height: 4),
+          Obx(() => DropdownButtonFormField<String>(
+                value: authController.selectedRole.value,
+                decoration: InputDecoration(
+                  hintText: "اختر نوع الحساب",
+                  prefixIcon:
+                      Icon(Icons.person_outline, color: iconTheme.color),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                items: [
+                  const DropdownMenuItem(
+                      value: "superviser", child: Text("مشرف")),
+                  const DropdownMenuItem(value: "teacher", child: Text("معلم")),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    authController.selectedRole.value = value;
+                  }
+                },
+              )),
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerLeft,
@@ -69,7 +97,7 @@ class LogIn extends StatelessWidget {
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () {
-              // TODO: Handle login logic
+              authController.login();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: colorScheme.primary,

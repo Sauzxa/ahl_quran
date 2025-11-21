@@ -2,10 +2,20 @@ import 'package:get/get.dart';
 
 class ProfileController extends GetxController {
   final avatarPath = 'assets/avatar.png'.obs;
-  final userName = 'مستخدم افتراضي'.obs;
-  final userRole = 'مستخدم'.obs;
+  final userName = ''.obs;
+  final userRole = ''.obs;
 
-  // Optional: method to update profile info dynamically
+  @override
+  void onInit() {
+    super.onInit();
+    fetchUserProfile();
+  }
+
+  Future<void> fetchUserProfile() async {
+    // This method can be used to fetch profile from API if needed
+    // For now, data is set by AuthController upon login/signup
+  }
+
   void updateProfile({
     required String avatar,
     required String name,

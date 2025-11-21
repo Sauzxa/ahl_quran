@@ -106,7 +106,7 @@ class AppScreens {
     ),
     GetPage(
       name: Routes.initial,
-      page: () => TestPage(),
+      page: () => const DashboardPage(),
     ),
 
     // Report screens

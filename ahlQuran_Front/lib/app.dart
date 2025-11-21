@@ -21,6 +21,8 @@ class MyApp extends StatelessWidget {
           darkTheme: AppTheme.dark,
           initialBinding: StarterBinding(),
           getPages: AppScreens.routes,
+          locale: const Locale('ar'),
+          fallbackLocale: const Locale('ar'),
           home: HomePage(),
         ));
   }

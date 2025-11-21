@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/profile_controller.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/drawer_controller.dart'
     as mydrawer;
+import 'package:the_doctarine_of_the_ppl_of_the_quran/routes/app_routes.dart';
 
 class CustomDrawer extends StatefulWidget {
   final bool miniMode;
@@ -24,14 +25,50 @@ class _CustomDrawerState extends State<CustomDrawer> {
   final profileController = Get.find<ProfileController>();
   final drawerController = Get.find<mydrawer.DrawerController>();
 
-  final List<Map<String, dynamic>> menuItems = [
-    {'icon': Icons.book, 'title': 'الخطط والمقررات'},
-    {'icon': Icons.bar_chart, 'title': 'التقارير'},
-    {'icon': Icons.insert_chart, 'title': 'الإحصائيات'},
-    {'icon': Icons.folder, 'title': 'إدارة المحتوى'},
-    {'icon': Icons.language, 'title': 'الموقع الإلكتروني'},
-    {'icon': Icons.campaign, 'title': 'الأخبار والإعلانات'},
-    {'icon': Icons.menu_book, 'title': 'المكتبة'},
+  final List<dynamic> menuItems = [
+    {
+      'type': 'item',
+      'icon': Icons.dashboard,
+      'title': 'لوحة القيادة',
+      'route': Routes.dashboardPage,
+    },
+    {
+      'type': 'item',
+      'icon': Icons.message,
+      'title': 'الرسائل',
+      'route': '/messages', // Placeholder
+    },
+    {
+      'type': 'item',
+      'icon': Icons.settings,
+      'title': 'الإعدادات',
+      'route': '/settings', // Placeholder
+    },
+    {'type': 'section', 'title': 'الشؤون الإدارية'},
+    {
+      'type': 'item',
+      'icon': Icons.people,
+      'title': 'الطلاب',
+      'route': Routes.addStudent,
+    },
+    {
+      'type': 'item',
+      'icon': Icons.person_outline,
+      'title': 'المعلمين',
+      'route': Routes.examTeachers,
+    },
+    {
+      'type': 'item',
+      'icon': Icons.family_restroom,
+      'title': 'أولياء الأمور',
+      'route': Routes.addGuardian,
+    },
+    {
+      'type': 'item',
+      'icon': Icons.menu_book,
+      'title': 'الحلقات',
+      'route': Routes.addLecture,
+    },
   ];
 
   @override
@@ -71,10 +108,24 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 itemCount: menuItems.length,
                 itemBuilder: (context, index) {
                   final item = menuItems[index];
+                  if (item['type'] == 'section') {
+                    if (widget.miniMode) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                      child: Text(
+                        item['title'],
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: const Color(0xFFD4AF37), // Gold color
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    );
+                  }
                   return Obx(() => _buildMenuItem(
                         context,
                         item['icon'],
                         item['title'],
+                        item['route'],
                         index,
                         selected: drawerController.selectedIndex.value == index,
                       ));
@@ -98,6 +149,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
     BuildContext context,
     IconData icon,
     String title,
+    String route,
     int index, {
     bool selected = false,
   }) {
@@ -115,7 +167,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
             ),
       onTap: () {
         drawerController.changeSelectedIndex(index);
-        // TODO: navigation logic
+        Get.toNamed(route);
       },
     );
   }

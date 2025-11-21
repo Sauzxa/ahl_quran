@@ -6,6 +6,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '/controllers/theme.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/helpers/image.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/helpers/lunch_url.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/auth_controller.dart';
+import 'package:flutter/services.dart';
 
 class BaseLayout extends StatefulWidget {
   final String title;
@@ -43,6 +45,14 @@ class _BaseLayoutState extends State<BaseLayout> {
           // visible
           return Row(
             children: [
+              CustomDrawer(
+                miniMode: miniMode,
+                onToggleMiniMode: () {
+                  setState(() {
+                    miniMode = !miniMode;
+                  });
+                },
+              ),
               Expanded(
                 child: Scaffold(
                   backgroundColor: theme.scaffoldBackgroundColor,
@@ -59,14 +69,6 @@ class _BaseLayoutState extends State<BaseLayout> {
                     ],
                   ),
                 ),
-              ),
-              CustomDrawer(
-                miniMode: miniMode,
-                onToggleMiniMode: () {
-                  setState(() {
-                    miniMode = !miniMode;
-                  });
-                },
               ),
             ],
           );
@@ -123,13 +125,7 @@ class _BaseLayoutState extends State<BaseLayout> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(
-                onPressed: () {
-                  themeController.switchTheme();
-                },
-                icon:
-                    Icon(Icons.nightlight_round, color: theme.iconTheme.color),
-              ),
+              // Right side (Start in RTL) - Menu Button
               LayoutBuilder(
                 builder: (context, constraints) {
                   if (constraints.maxWidth < 1024) {
@@ -142,6 +138,59 @@ class _BaseLayoutState extends State<BaseLayout> {
                     return const SizedBox.shrink();
                   }
                 },
+              ),
+
+              // Left side (End in RTL) - Action Buttons
+              Row(
+                children: [
+                  // Fullscreen
+                  IconButton(
+                    icon: Icon(Icons.fullscreen, color: theme.iconTheme.color),
+                    onPressed: () {
+                      // Toggle fullscreen
+                      SystemChrome.setEnabledSystemUIMode(
+                          SystemUiMode.immersiveSticky);
+                      // Note: For web, this requires dart:html or a package
+                    },
+                  ),
+                  // Message
+                  IconButton(
+                    icon: Icon(Icons.chat_bubble_outline,
+                        color: theme.iconTheme.color),
+                    onPressed: () {
+                      // TODO: Open messages
+                    },
+                  ),
+                  // Theme
+                  IconButton(
+                    onPressed: () {
+                      themeController.switchTheme();
+                    },
+                    icon: Icon(Icons.nightlight_round,
+                        color: theme.iconTheme.color),
+                  ),
+                  const SizedBox(width: 8),
+                  // Logout
+                  TextButton.icon(
+                    icon: const Icon(Icons.logout,
+                        color: Color(0xFF4CAF50), size: 20), // Green color
+                    label: const Text(
+                      "تسجيل الخروج",
+                      style: TextStyle(
+                        color: Color(0xFF4CAF50),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onPressed: () {
+                      try {
+                        Get.find<AuthController>().logout();
+                      } catch (e) {
+                        // Fallback if controller not found
+                        Get.offAllNamed('/login');
+                      }
+                    },
+                  ),
+                ],
               ),
             ],
           ),

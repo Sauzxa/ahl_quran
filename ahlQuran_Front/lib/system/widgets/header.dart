@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/profile_controller.dart';
 
 class Header extends StatelessWidget {
   const Header({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final profileController = Get.find<ProfileController>();
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -13,15 +17,15 @@ class Header extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'مرحباً بك',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
+          Obx(() => Text(
+                'مرحباً بك , ${profileController.userName.value}',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.bold,
+                    ),
+              )),
           const SizedBox(height: 4),
           Text(
             'مرحبا بك في المنصة، يسر الله لك القيام بمهمتك السامية.',

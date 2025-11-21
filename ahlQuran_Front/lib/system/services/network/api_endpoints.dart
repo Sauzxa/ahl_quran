@@ -37,6 +37,7 @@ class ApiEndpoints {
   static String getAccountInfoById(int id) => '$baseUrl/accountinfos/$id';
   static final String login = '$baseUrl/auth/login';
   static final String signup = '$baseUrl/auth/signup';
+  static final String logout = '$baseUrl/auth/logout';
 
   // Appreciation endpoints
   static final String getAppreciations = '$baseUrl/appreciations';
