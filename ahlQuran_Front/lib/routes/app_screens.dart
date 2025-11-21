@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/copy.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/management_binding.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/acheivement.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/student_management_binding.dart';
 //import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/starter.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/attendance_binding.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/charts/stat1_binding.dart';
@@ -13,8 +14,6 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/forms/ex
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/forms/exam_teachers_from.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/forms/guardian_form.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/forms/lecture_form.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/student.dart'
-    as student;
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/appreciation.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/exam.dart';
 //import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/exam_teacher_binding.dart'; // Assuming this is correct
@@ -26,7 +25,7 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_teachers.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_types.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/web/pages/copy.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/student_managment.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/student_managment_new.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/guardian_managment.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/lecture_managment.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/achievement_managment.dart';
@@ -70,9 +69,8 @@ class AppScreens {
     ),
     GetPage(
       name: Routes.addStudent,
-      page: () => AddStudent(),
-      binding: ManagementBinding<student.Student>(
-          fromJson: student.Student.fromJson),
+      page: () => const StudentManagementScreen(),
+      binding: StudentManagementBinding(),
     ),
     GetPage(
       name: Routes.addGuardian,
@@ -106,7 +104,7 @@ class AppScreens {
     ),
     GetPage(
       name: Routes.initial,
-      page: () => const DashboardPage(),
+      page: () => LogInPage(),
     ),
 
     // Report screens

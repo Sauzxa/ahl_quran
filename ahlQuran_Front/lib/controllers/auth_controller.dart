@@ -177,27 +177,16 @@ class AuthController extends GetxController {
   }
 
   void _navigateBasedOnRole(String role) {
-    switch (role) {
-      case AccountInfo.student:
-        // Navigate to Student Dashboard/Management
-        // Get.offAllNamed(Routes.studentDashboard); // Example
-        Get.snackbar('Success', 'Welcome Student');
-        break;
-      case AccountInfo.teacher:
-        // Navigate to Teacher Dashboard/Management
-        Get.snackbar('Success', 'Welcome Teacher');
-        break;
-      case AccountInfo.guardian:
-        // Navigate to Guardian Dashboard/Management
-        Get.snackbar('Success', 'Welcome Guardian');
-        break;
-      case AccountInfo.supervisor:
-        // Navigate to Student Management as requested
-        Get.offAllNamed(Routes.addStudent);
-        break;
-      default:
-        Get.snackbar('Error', 'Unknown role');
-    }
+    // Navigate to Dashboard for all roles
+    Get.offAllNamed(Routes.dashboardPage);
+    
+    Get.snackbar(
+      'تم تسجيل الدخول بنجاح',
+      'مرحباً بك',
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: Get.theme.colorScheme.primary,
+      colorText: Get.theme.colorScheme.onPrimary,
+    );
   }
 
   Future<void> logout() async {
