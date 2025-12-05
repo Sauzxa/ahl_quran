@@ -1,6 +1,0 @@
-{
-  "name": "ahl_quran/backend",
-  "require": {
-    "vlucas/phpdotenv": "^5.6"
-  }
-}
