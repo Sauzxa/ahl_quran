@@ -1,0 +1,25 @@
+from app.core.config import settings
+
+from .auth import authRouter
+from .admin import adminRouter
+from .president import presidentRouter
+from .supervisor import supervisorRouter
+from .teacher import teacherRouter
+from .student import studentRouter
+
+def register_routes(app):
+    routes = [
+        (authRouter, "/auth", ["Authentication"]),
+        (adminRouter, "/admin", ["Admin"]),
+        (presidentRouter, "/president", ["President"]),
+        (supervisorRouter, "/supervisor", ["Supervisor"]),
+        (teacherRouter, "/teacher", ["Teacher"]),
+        (studentRouter, "/students", ["Students"]),
+    ]
+
+    for router, prefix, tags in routes:
+        app.include_router(
+            router,
+            prefix=f"{settings.API_V1_PREFIX}{prefix}",
+            tags=tags
+        )
