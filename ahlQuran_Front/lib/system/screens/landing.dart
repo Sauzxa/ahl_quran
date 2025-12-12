@@ -101,42 +101,66 @@ class DashboardPage extends StatelessWidget {
       title: 'لوحة التحكم',
       child: LayoutBuilder(
         builder: (context, constraints) {
-          const double tileWidth = 300;
-          const double spacing = 12;
+          const double spacing = 16;
+          const int maxColumns = 4;
+          const int maxRows = 3;
 
-          // Calculate how many tiles fit in the current width
-          int crossAxisCount =
-              (constraints.maxWidth / (tileWidth + spacing)).floor();
-          crossAxisCount = crossAxisCount < 1 ? 1 : crossAxisCount;
+          // Calculate number of columns based on available width
+          // but cap at maxColumns (4)
+          int crossAxisCount = maxColumns;
+          if (constraints.maxWidth < 1200) {
+            crossAxisCount = 3;
+          }
+          if (constraints.maxWidth < 900) {
+            crossAxisCount = 2;
+          }
+          if (constraints.maxWidth < 600) {
+            crossAxisCount = 1;
+          }
 
-          // Actual grid width
-          double gridWidth =
-              crossAxisCount * tileWidth + (crossAxisCount - 1) * spacing;
+          // Limit items to maxRows * maxColumns
+          final maxItems = maxRows * maxColumns;
+          final displayedTiles = tiles.take(maxItems).toList();
 
-          return Center(
-            child: SizedBox(
-              width: gridWidth,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Header(),
-                  const SizedBox(height: 16),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      crossAxisSpacing: spacing,
-                      mainAxisSpacing: spacing,
-                      childAspectRatio: 3.5, // Adjust for tile shape
-                    ),
-                    itemCount: tiles.length,
-                    itemBuilder: (context, index) {
-                      return DashboardTile(config: tiles[index]);
-                    },
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Header(),
+                const SizedBox(height: 16),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: spacing,
+                    mainAxisSpacing: spacing,
+                    childAspectRatio: 3.5,
                   ),
-                ],
-              ),
+                  itemCount: displayedTiles.length,
+                  itemBuilder: (context, index) {
+                    // Calculate which row this item is in (0-indexed)
+                    final row = index ~/ crossAxisCount;
+                    // Apply mint green background to 2nd row (row index 1)
+                    final backgroundColor =
+                        row == 1 ? const Color(0xFF4DB6AC) : null;
+
+                    // Create a modified config with the background color
+                    final config = DashboardTileConfig(
+                      label: displayedTiles[index].label,
+                      icon: displayedTiles[index].icon,
+                      bigIcon: displayedTiles[index].bigIcon,
+                      page: displayedTiles[index].page,
+                      count: displayedTiles[index].count,
+                      isWide: displayedTiles[index].isWide,
+                      backgroundColor: backgroundColor,
+                    );
+
+                    return DashboardTile(config: config);
+                  },
+                ),
+              ],
             ),
           );
         },

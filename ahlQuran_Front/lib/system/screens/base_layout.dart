@@ -99,123 +99,90 @@ class _BaseLayoutState extends State<BaseLayout> {
 
   Widget _buildHeader(ThemeData theme) {
     return Container(
-      color: theme.appBarTheme.backgroundColor,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              CustomAssetImage(assetPath: "assets/logo.png", height: 50),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  widget.title,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.titleLarge,
-                ),
-              ),
-              const SizedBox(width: 10),
-              _buildStoreButtons(),
-            ],
+      decoration: BoxDecoration(
+        color: theme.appBarTheme.backgroundColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+            spreadRadius: 1,
           ),
-          const SizedBox(height: 8),
-          DottedLine(dashColor: theme.dividerColor),
-          const SizedBox(height: 8),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Right side (Start in RTL) - Menu Button
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 1024) {
+                return IconButton(
+                  icon: Icon(Icons.menu, color: theme.iconTheme.color),
+                  onPressed: () =>
+                      baseLayoutScaffoldKey.currentState?.openEndDrawer(),
+                );
+              } else {
+                return const SizedBox.shrink();
+              }
+            },
+          ),
+
+          // Left side (End in RTL) - Action Buttons
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Right side (Start in RTL) - Menu Button
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  if (constraints.maxWidth < 1024) {
-                    return IconButton(
-                      icon: Icon(Icons.menu, color: theme.iconTheme.color),
-                      onPressed: () =>
-                          baseLayoutScaffoldKey.currentState?.openEndDrawer(),
-                    );
-                  } else {
-                    return const SizedBox.shrink();
-                  }
+              // Fullscreen
+              IconButton(
+                icon: Icon(Icons.fullscreen, color: theme.iconTheme.color),
+                onPressed: () {
+                  // Toggle fullscreen
+                  SystemChrome.setEnabledSystemUIMode(
+                      SystemUiMode.immersiveSticky);
+                  // Note: For web, this requires dart:html or a package
                 },
               ),
-
-              // Left side (End in RTL) - Action Buttons
-              Row(
-                children: [
-                  // Fullscreen
-                  IconButton(
-                    icon: Icon(Icons.fullscreen, color: theme.iconTheme.color),
-                    onPressed: () {
-                      // Toggle fullscreen
-                      SystemChrome.setEnabledSystemUIMode(
-                          SystemUiMode.immersiveSticky);
-                      // Note: For web, this requires dart:html or a package
-                    },
+              // Message
+              IconButton(
+                icon: Icon(Icons.chat_bubble_outline,
+                    color: theme.iconTheme.color),
+                onPressed: () {
+                  // TODO: Open messages
+                },
+              ),
+              // Theme
+              IconButton(
+                onPressed: () {
+                  themeController.switchTheme();
+                },
+                icon:
+                    Icon(Icons.nightlight_round, color: theme.iconTheme.color),
+              ),
+              const SizedBox(width: 8),
+              // Logout
+              TextButton.icon(
+                icon: const Icon(Icons.logout,
+                    color: Color(0xFF4CAF50), size: 20), // Green color
+                label: const Text(
+                  "تسجيل الخروج",
+                  style: TextStyle(
+                    color: Color(0xFF4CAF50),
+                    fontWeight: FontWeight.bold,
                   ),
-                  // Message
-                  IconButton(
-                    icon: Icon(Icons.chat_bubble_outline,
-                        color: theme.iconTheme.color),
-                    onPressed: () {
-                      // TODO: Open messages
-                    },
-                  ),
-                  // Theme
-                  IconButton(
-                    onPressed: () {
-                      themeController.switchTheme();
-                    },
-                    icon: Icon(Icons.nightlight_round,
-                        color: theme.iconTheme.color),
-                  ),
-                  const SizedBox(width: 8),
-                  // Logout
-                  TextButton.icon(
-                    icon: const Icon(Icons.logout,
-                        color: Color(0xFF4CAF50), size: 20), // Green color
-                    label: const Text(
-                      "تسجيل الخروج",
-                      style: TextStyle(
-                        color: Color(0xFF4CAF50),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    onPressed: () {
-                      try {
-                        Get.find<AuthController>().logout();
-                      } catch (e) {
-                        // Fallback if controller not found
-                        Get.offAllNamed('/login');
-                      }
-                    },
-                  ),
-                ],
+                ),
+                onPressed: () {
+                  try {
+                    Get.find<AuthController>().logout();
+                  } catch (e) {
+                    // Fallback if controller not found
+                    Get.offAllNamed('/login');
+                  }
+                },
               ),
             ],
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildStoreButtons() {
-    return Wrap(
-      spacing: 10,
-      children: [
-        GestureDetector(
-          onTap: () => launchURL(
-              'https://apps.apple.com/us/app/example-app/id123456789'),
-          child:
-              SvgPicture.asset('assets/appstore.svg', height: 50, width: 120),
-        ),
-        GestureDetector(
-          onTap: () => launchURL(
-              'https://play.google.com/store/apps/details?id=com.example.app'),
-          child:
-              CustomAssetImage(assetPath: 'assets/googleplay.png', height: 50),
-        ),
-      ],
     );
   }
 

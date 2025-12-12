@@ -123,7 +123,7 @@ class NavBar extends StatelessWidget {
                     titles[index],
                     style: TextStyle(
                       color:
-                          hovered ? theme.colorScheme.secondary : Colors.white,
+                          hovered ? theme.colorScheme.secondary : Colors.black,
                       fontWeight: titles[index] == 'تسجيل الدخول'
                           ? FontWeight.w900
                           : FontWeight.w600,

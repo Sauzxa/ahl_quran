@@ -5,10 +5,10 @@ class ApiConfig {
   static const String ip = 'localhost';
 
   // Backend server port (80 for HTTP, 443 for HTTPS, or custom port)
-  static const String port = '80';
+  static const String port = '8000';
 
   // API path on the server
-  static const String apiPath = 'quran/ahl_quran_backend/api/v1';
+  static const String apiPath = 'api/v1';
 
   // Use HTTPS instead of HTTP
   static const bool useHttps = false;
@@ -38,6 +38,10 @@ class ApiEndpoints {
   static final String login = '$baseUrl/auth/login';
   static final String signup = '$baseUrl/auth/signup';
   static final String logout = '$baseUrl/auth/logout';
+  static final String presidentRegister = '$baseUrl/auth/president/register';
+  static final String presidentLogin = '$baseUrl/auth/president/login';
+  static final String supervisorLogin = '$baseUrl/auth/supervisor/login';
+  static final String getCurrentUser = '$baseUrl/auth/me';
 
   // Appreciation endpoints
   static final String getAppreciations = '$baseUrl/appreciations';

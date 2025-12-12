@@ -8,6 +8,7 @@ class DashboardTileConfig {
   final Widget Function() page;
   final String? count;
   final bool isWide;
+  final Color? backgroundColor;
 
   DashboardTileConfig({
     required this.label,
@@ -16,6 +17,7 @@ class DashboardTileConfig {
     required this.page,
     this.count,
     this.isWide = false,
+    this.backgroundColor,
   });
 }
 
@@ -35,8 +37,11 @@ class _DashboardTileState extends State<DashboardTile> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = theme.colorScheme.primaryContainer;
-    final onColor = theme.colorScheme.onPrimaryContainer;
+    final color =
+        widget.config.backgroundColor ?? theme.colorScheme.primaryContainer;
+    final onColor = widget.config.backgroundColor != null
+        ? Colors.white
+        : theme.colorScheme.onPrimaryContainer;
 
     final scale = _hovering ? 1.04 : 1.0;
     final iconScale = _hovering ? 1.14 : 1.0;
@@ -69,6 +74,7 @@ class _DashboardTileState extends State<DashboardTile> {
             ),
             child: Stack(
               children: [
+                // Background icon (left side, same position)
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Padding(
@@ -93,40 +99,41 @@ class _DashboardTileState extends State<DashboardTile> {
                     ),
                   ),
                 ),
+                // Content: 3 columns from left to right (icon, name, number)
                 Align(
                   alignment: Alignment.centerRight,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 26),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              widget.config.label,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                color: onColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            if (widget.config.count != null)
-                              Text(
-                                widget.config.count!,
-                                style: theme.textTheme.headlineSmall?.copyWith(
-                                  color: onColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(width: 12),
+                        // Column 1: Icon (left)
                         Icon(
                           widget.config.icon,
                           color: onColor,
-                          size: 28,
+                          size: 32,
                         ),
+                        const SizedBox(width: 16),
+                        // Column 2: Name
+                        Text(
+                          widget.config.label,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: onColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        // Column 3: Number (right)
+                        if (widget.config.count != null)
+                          Text(
+                            widget.config.count!,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              color: onColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 28,
+                            ),
+                          ),
                       ],
                     ),
                   ),

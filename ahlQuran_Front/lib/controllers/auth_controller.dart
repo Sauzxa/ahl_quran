@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import '../system/new_models/forms/account_info.dart';
 import '../system/services/network/api_endpoints.dart';
 import '../routes/app_routes.dart';
 import 'profile_controller.dart';
@@ -10,15 +9,27 @@ import 'profile_controller.dart';
 class AuthController extends GetxController {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
-  // Ensure default is NOT student, as it's removed from dropdown we pôvide that in mobile version
-  final selectedRole = AccountInfo.teacher.obs;
+  final firstnameController = TextEditingController();
+  final lastnameController = TextEditingController();
+  final emailController = TextEditingController();
+  final schoolNameController = TextEditingController();
+  final phoneNumberController = TextEditingController();
+  // Default to president for registration/login
+  final selectedRole = 'president'.obs;
 
   void signup() async {
-    final username = usernameController.text;
+    final firstname = firstnameController.text;
+    final lastname = lastnameController.text;
+    final email = emailController.text;
     final password = passwordController.text;
-    final role = selectedRole.value;
+    final schoolName = schoolNameController.text;
+    final phoneNumber = phoneNumberController.text;
 
-    if (username.isEmpty || password.isEmpty) {
+    if (firstname.isEmpty ||
+        lastname.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        schoolName.isEmpty) {
       Get.snackbar(
         'حقول مطلوبة',
         'يرجى ملء جميع الحقول المطلوبة',
@@ -30,11 +41,14 @@ class AuthController extends GetxController {
     }
 
     try {
-      final url = Uri.parse(ApiEndpoints.signup);
+      final url = Uri.parse(ApiEndpoints.presidentRegister);
       final body = jsonEncode({
-        "username": username,
-        "passcode": password,
-        "account_type": role,
+        "firstname": firstname,
+        "lastname": lastname,
+        "email": email,
+        "password": password,
+        "school_name": schoolName,
+        "phone_number": phoneNumber.isNotEmpty ? phoneNumber : null,
       });
 
       print('Sending signup request to $url with body: $body');
@@ -49,16 +63,19 @@ class AuthController extends GetxController {
       print('Response body: ${response.body}');
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        // Success
-        // Update ProfileController with the new user data
-        final profileController = Get.find<ProfileController>();
-        profileController.updateProfile(
-          avatar: 'assets/avatar.png', // Default avatar
-          name: username,
-          role: role,
+        // Success - show message about pending approval
+        final responseData = jsonDecode(response.body);
+        Get.snackbar(
+          'تم إنشاء الحساب بنجاح',
+          responseData['message'] ?? 'حسابك قيد المراجعة من قبل المسؤول',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Get.theme.colorScheme.primary,
+          colorText: Get.theme.colorScheme.onPrimary,
+          duration: const Duration(seconds: 5),
         );
 
-        _navigateBasedOnRole(role);
+        // Navigate back to login
+        Get.back();
       } else {
         // Error - parse and clean the response
         String errorMsg = _parseErrorMessage(response.body);
@@ -83,11 +100,11 @@ class AuthController extends GetxController {
   }
 
   void login() async {
-    final username = usernameController.text;
+    final email = usernameController.text;
     final password = passwordController.text;
     final role = selectedRole.value;
 
-    if (username.isEmpty || password.isEmpty) {
+    if (email.isEmpty || password.isEmpty) {
       Get.snackbar(
         'حقول مطلوبة',
         'يرجى ملء جميع الحقول المطلوبة',
@@ -99,11 +116,21 @@ class AuthController extends GetxController {
     }
 
     try {
-      final url = Uri.parse(ApiEndpoints.login);
+      // Determine the correct endpoint based on role
+      String endpoint;
+      if (role == 'president') {
+        endpoint = ApiEndpoints.presidentLogin;
+      } else if (role == 'supervisor' || role == 'superviser') {
+        endpoint = ApiEndpoints.supervisorLogin;
+      } else {
+        // Default to old login endpoint for other roles
+        endpoint = ApiEndpoints.login;
+      }
+
+      final url = Uri.parse(endpoint);
       final body = jsonEncode({
-        "username": username,
-        "passcode": password,
-        "account_type": role, // Backend requires account_type
+        "email": email,
+        "password": password,
       });
 
       print('Sending login request to $url with body: $body');
@@ -118,16 +145,47 @@ class AuthController extends GetxController {
       print('Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Success - backend returns the user profile object
-        // Update ProfileController
+        // Success - extract user data from login response
+        final responseData = jsonDecode(response.body);
+
+        print('Full response data: $responseData');
+
+        // Get user data from response
+        String firstName = '';
+        String lastName = '';
+        if (responseData['user'] != null) {
+          firstName = responseData['user']['firstname'] ?? '';
+          lastName = responseData['user']['lastname'] ?? '';
+          print('Extracted names - First: $firstName, Last: $lastName');
+        } else {
+          print('No user object in response!');
+        }
+
+        // Update profile controller with user data
         final profileController = Get.find<ProfileController>();
-        profileController.updateProfile(
-          avatar: 'assets/avatar.png', // Default avatar
-          name: username, // Use the username entered
-          role: role, // Use the selected role
+        await profileController.updateProfile(
+          avatar: 'assets/avatar.png',
+          name: email,
+          role: role,
+          email: email,
+          first: firstName,
+          last: lastName,
         );
 
-        _navigateBasedOnRole(role);
+        print(
+            'Profile updated - First: ${profileController.firstName.value}, Last: ${profileController.lastName.value}');
+
+        // Navigate to dashboard immediately
+        Get.offAllNamed(Routes.dashboardPage);
+
+        // Show success message
+        Get.snackbar(
+          'تم تسجيل الدخول بنجاح',
+          'مرحباً بك',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Get.theme.colorScheme.primary,
+          colorText: Get.theme.colorScheme.onPrimary,
+        );
       } else {
         // Error - parse and clean the response
         String errorMsg = _parseErrorMessage(response.body);
@@ -176,21 +234,12 @@ class AuthController extends GetxController {
     }
   }
 
-  void _navigateBasedOnRole(String role) {
-    // Navigate to Dashboard for all roles
-    Get.offAllNamed(Routes.dashboardPage);
-    
-    Get.snackbar(
-      'تم تسجيل الدخول بنجاح',
-      'مرحباً بك',
-      snackPosition: SnackPosition.TOP,
-      backgroundColor: Get.theme.colorScheme.primary,
-      colorText: Get.theme.colorScheme.onPrimary,
-    );
-  }
-
   Future<void> logout() async {
     try {
+      // Clear stored profile data
+      final profileController = Get.find<ProfileController>();
+      await profileController.clearProfile();
+
       final url = Uri.parse(ApiEndpoints.logout);
       // Assuming you might need to send a token or session ID, but for now just a POST
       final response = await http.post(url);

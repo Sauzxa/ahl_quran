@@ -8,30 +8,41 @@ class Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final profileController = Get.find<ProfileController>();
+    final mintGreen = const Color(0xFF4DB6AC);
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary,
+        color: mintGreen,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Obx(() => Text(
-                'مرحباً بك , ${profileController.userName.value}',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.bold,
-                    ),
-              )),
-          const SizedBox(height: 4),
+          Obx(() {
+            final firstName = profileController.firstName.value;
+            final lastName = profileController.lastName.value;
+            final displayName = (firstName.isNotEmpty || lastName.isNotEmpty)
+                ? '$firstName $lastName'.trim()
+                : profileController.userName.value;
+
+            return Text(
+              'مرحباً بك، $displayName',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+              textAlign: TextAlign.center,
+            );
+          }),
+          const SizedBox(height: 8),
           Text(
             'مرحبا بك في المنصة، يسر الله لك القيام بمهمتك السامية.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  color: Colors.white,
                 ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),

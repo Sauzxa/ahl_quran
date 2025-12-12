@@ -29,12 +29,12 @@ class LogIn extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          Text("اسم المستخدم", style: textTheme.bodyMedium),
+          Text("البريد الإلكتروني", style: textTheme.bodyMedium),
           const SizedBox(height: 4),
           TextField(
             controller: authController.usernameController,
             decoration: InputDecoration(
-              hintText: "ادخل اسم المستخدم",
+              hintText: "البريد الإلكتروني",
               prefixIcon: Icon(Icons.email_outlined, color: iconTheme.color),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -70,7 +70,9 @@ class LogIn extends StatelessWidget {
                 ),
                 items: [
                   const DropdownMenuItem(
-                      value: "superviser", child: Text("مشرف")),
+                      value: "president", child: Text("رئيس")),
+                  const DropdownMenuItem(
+                      value: "supervisor", child: Text("مشرف")),
                   const DropdownMenuItem(value: "teacher", child: Text("معلم")),
                 ],
                 onChanged: (value) {
