@@ -15,7 +15,7 @@ from app.core.security import get_password_hash
 import logging
 logger = logging.getLogger(__name__)
 
-studentRouter = APIRouter(prefix="/students", tags=["Students"])
+studentRouter = APIRouter()
 
 
 @studentRouter.post("/", response_model=StudentResponse, status_code=status.HTTP_201_CREATED)
@@ -86,7 +86,7 @@ async def list_students(
     skip: int = 0,
     limit: int = 100,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_president_or_supervisor)
+    # current_user: User = Depends(require_president_or_supervisor)
 ):
     """Get all students. Only presidents and supervisors can view all students."""
 
