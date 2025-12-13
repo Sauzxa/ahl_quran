@@ -54,7 +54,7 @@ class Student implements Model {
   }
 
   static Student fromJson(Map<String, dynamic> json) {
-    return Student()
+    final student = Student()
       ..personalInfo = json['personalInfo'] != null
           ? PersonalInfo.fromJson(json['personalInfo'])
           : PersonalInfo()
@@ -84,5 +84,12 @@ class Student implements Model {
       ..subscriptionInfo = json['subscriptionInfo'] != null
           ? SubscriptionInfo.fromJson(json['subscriptionInfo'])
           : SubscriptionInfo();
+
+    // Map top-level ID to personalInfo.studentId if available
+    if (json['id'] != null) {
+      student.personalInfo.studentId = json['id'];
+    }
+
+    return student;
   }
 }

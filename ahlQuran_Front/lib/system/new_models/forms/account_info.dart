@@ -27,10 +27,10 @@ class AccountInfo implements Model {
   });
 
   factory AccountInfo.fromJson(Map<String, dynamic> json) => AccountInfo(
-        accountId: json['account_id'],
+        accountId: json['accountId'] ?? json['account_id'],
         username: json['username'],
         passcode: json['passcode'],
-        accountType: json['account_type'],
+        accountType: json['accountType'] ?? json['account_type'],
       );
 
   @override

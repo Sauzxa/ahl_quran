@@ -17,11 +17,11 @@ class FormalEducationInfo implements Model {
 
   factory FormalEducationInfo.fromJson(Map<String, dynamic> json) =>
       FormalEducationInfo(
-        studentId: json['student_id'],
-        schoolName: json['school_name'],
-        schoolType: json['school_type'],
+        studentId: json['studentId'] ?? json['student_id'],
+        schoolName: json['schoolName'] ?? json['school_name'],
+        schoolType: json['schoolType'] ?? json['school_type'],
         grade: json['grade'],
-        academicLevel: json['academic_level'],
+        academicLevel: json['academicLevel'] ?? json['academic_level'],
       );
 
   @override

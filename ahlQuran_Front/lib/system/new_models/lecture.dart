@@ -18,12 +18,15 @@ class Lecture implements Model {
   });
 
   factory Lecture.fromJson(Map<String, dynamic> json) => Lecture(
-        lectureId: json['lecture_id'],
-        teamAccomplishmentId: json['team_accomplishment_id'],
-        lectureNameAr: json['lecture_name_ar'],
-        lectureNameEn: json['lecture_name_en'],
-        shownOnWebsite: json['shown_on_website'] == 1,
-        circleType: json['circle_type'],
+        lectureId: json['lectureId'] ?? json['lecture_id'],
+        teamAccomplishmentId:
+            json['teamAccomplishmentId'] ?? json['team_accomplishment_id'],
+        lectureNameAr: json['lectureNameAr'] ?? json['lecture_name_ar'],
+        lectureNameEn: json['lectureNameEn'] ?? json['lecture_name_en'],
+        shownOnWebsite:
+            (json['shownOnWebsite'] ?? json['shown_on_website']) == 1 ||
+                (json['shownOnWebsite'] ?? json['shown_on_website']) == true,
+        circleType: json['circleType'] ?? json['circle_type'],
       );
 
   @override

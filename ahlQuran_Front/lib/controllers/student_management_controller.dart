@@ -196,15 +196,15 @@ class StudentManagementController extends GetxController {
     }
   }
 
-  /// Delete student by account ID
+  /// Delete student by student ID
   Future<bool> deleteStudent(Student student) async {
     isLoading.value = true;
     errorMessage.value = '';
 
     try {
-      // Delete using account ID endpoint
+      // Delete using student ID endpoint
       await ApiService.delete(
-        ApiEndpoints.getAccountInfoById(student.accountInfo.accountId),
+        ApiEndpoints.getStudentById(student.personalInfo.studentId as int),
       );
 
       // Remove from lists
@@ -238,7 +238,7 @@ class StudentManagementController extends GetxController {
       for (var student in selectedStudents.toList()) {
         try {
           await ApiService.delete(
-            ApiEndpoints.getAccountInfoById(student.accountInfo.accountId),
+            ApiEndpoints.getStudentById(student.personalInfo.studentId as int),
           );
         } catch (e) {
           allSuccess = false;

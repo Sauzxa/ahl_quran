@@ -28,17 +28,19 @@ class Guardian implements Model {
   });
 
   factory Guardian.fromJson(Map<String, dynamic> json) => Guardian(
-        guardianId: json['guardian_id'],
-        firstName: json['first_name'],
-        lastName: json['last_name'],
+        guardianId: json['guardianId'] ?? json['guardian_id'],
+        firstName: json['firstName'] ?? json['first_name'],
+        lastName: json['lastName'] ?? json['last_name'],
         email: json['email'],
-        dateOfBirth: json['date_of_birth'],
+        dateOfBirth: json['dateOfBirth'] ?? json['date_of_birth'],
         relationship: json['relationship'],
-        guardianContactId: json['guardian_contact_id'],
-        guardianAccountId: json['guardian_account_id'],
-        homeAddress: json['home_address'],
+        guardianContactId:
+            json['guardianContactId'] ?? json['guardian_contact_id'],
+        guardianAccountId:
+            json['guardianAccountId'] ?? json['guardian_account_id'],
+        homeAddress: json['homeAddress'] ?? json['home_address'],
         job: json['job'],
-        profileImage: json['profile_image'],
+        profileImage: json['profileImage'] ?? json['profile_image'],
       );
 
   @override

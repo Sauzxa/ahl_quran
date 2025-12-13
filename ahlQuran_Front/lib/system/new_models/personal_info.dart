@@ -32,19 +32,19 @@ class PersonalInfo implements Model {
   });
 
   factory PersonalInfo.fromJson(Map<String, dynamic> json) => PersonalInfo(
-        studentId: json['student_id'],
-        firstNameAr: json['first_name_ar'],
-        lastNameAr: json['last_name_ar'],
-        firstNameEn: json['first_name_en'],
-        lastNameEn: json['last_name_en'],
+        studentId: json['studentId'] ?? json['student_id'],
+        firstNameAr: json['firstNameAr'] ?? json['first_name_ar'],
+        lastNameAr: json['lastNameAr'] ?? json['last_name_ar'],
+        firstNameEn: json['firstNameEn'] ?? json['first_name_en'],
+        lastNameEn: json['lastNameEn'] ?? json['last_name_en'],
         nationality: json['nationality'],
         sex: json['sex'],
-        dateOfBirth: json['date_of_birth'],
-        placeOfBirth: json['place_of_birth'],
-        homeAddress: json['home_address'],
-        fatherStatus: json['father_status'],
-        motherStatus: json['mother_status'],
-        profileImage: json['profile_image'],
+        dateOfBirth: json['dateOfBirth'] ?? json['date_of_birth'],
+        placeOfBirth: json['placeOfBirth'] ?? json['place_of_birth'],
+        homeAddress: json['homeAddress'] ?? json['home_address'],
+        fatherStatus: json['fatherStatus'] ?? json['father_status'],
+        motherStatus: json['motherStatus'] ?? json['mother_status'],
+        profileImage: json['profileImage'] ?? json['profile_image'],
       );
 
   @override
