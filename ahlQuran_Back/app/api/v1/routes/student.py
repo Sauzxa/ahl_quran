@@ -148,8 +148,8 @@ async def create_student(
 
     # Create user record
     new_user = User(
-        firstname=student_data.personalInfo.firstNameAr,
-        lastname=student_data.personalInfo.lastNameAr,
+        firstname=student_data.personalInfo.first_name_ar,
+        lastname=student_data.personalInfo.last_name_ar,
         email=student_data.contactInfo.email,
         hashed_password=get_password_hash(student_data.accountInfo.passcode),
         role=UserRoleEnum.STUDENT,
@@ -161,28 +161,28 @@ async def create_student(
 
     # Create student record
     # Construct parent name from guardian info
-    parent_name = f"{student_data.guardian.firstName or ''} {student_data.guardian.lastName or ''}".strip()
+    parent_name = f"{student_data.guardian.first_name or ''} {student_data.guardian.last_name or ''}".strip()
     
     new_student = Student(
         user_id=new_user.id,
         parent_name=parent_name if parent_name else None,
-        parent_phone=student_data.contactInfo.phoneNumber,
+        parent_phone=student_data.contactInfo.phone_number,
         guardian_email=student_data.guardian.email,
         created_by_id=current_user.id,
         Golden=False,
         
         # New Fields Mapped from JSON
         sex=student_data.personalInfo.sex,
-        date_of_birth=student_data.personalInfo.dateOfBirth,
-        place_of_birth=student_data.personalInfo.placeOfBirth,
-        home_address=student_data.personalInfo.homeAddress,
+        date_of_birth=student_data.personalInfo.date_of_birth,
+        place_of_birth=student_data.personalInfo.place_of_birth,
+        home_address=student_data.personalInfo.home_address,
         nationality=student_data.personalInfo.nationality,
         
-        academic_level=student_data.formalEducationInfo.academicLevel,
+        academic_level=student_data.formalEducationInfo.academic_level,
         grade=student_data.formalEducationInfo.grade,
-        school_name=student_data.formalEducationInfo.schoolName,
+        school_name=student_data.formalEducationInfo.school_name,
         
-        guardian_id=student_data.guardian.guardianId
+        guardian_id=student_data.guardian.guardian_id
     )
 
     db.add(new_student)
@@ -193,7 +193,7 @@ async def create_student(
         for lecture in student_data.lectures:
             participation = SessionParticipation(
                 student_id=new_student.id,
-                session_id=lecture.lectureId,
+                session_id=lecture.lecture_id,
                 # Add other fields if needed, e.g. join_date
             )
             db.add(participation)

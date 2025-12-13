@@ -18,7 +18,7 @@ class Student(Base):
     )
     
     # Student-specific fields
-    enrollment_date: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    enrollment_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     parent_name: Mapped[Optional[str]] = mapped_column(String(255))
     parent_phone: Mapped[Optional[str]] = mapped_column(String(20)) 
     guardian_email: Mapped[Optional[str]] = mapped_column(String(255))
