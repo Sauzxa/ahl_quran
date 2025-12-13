@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import ORJSONResponse
 from contextlib import asynccontextmanager
 import logging
 
@@ -34,7 +35,8 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Backend API for Ahl El Quran School Management System",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    default_response_class=ORJSONResponse
 )
 
 # CORS Configuration

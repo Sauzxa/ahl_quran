@@ -14,13 +14,20 @@ async def get_current_user(
         request: Request,  # ← Use Request instead of Cookie
         db: AsyncSession = Depends(get_db)
 ):
+    # Try to get token from cookies first
     access_token = request.cookies.get("access_token")
+    
+    # If not in cookies, try Authorization header
     if not access_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            access_token = auth_header
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not authenticated",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
     logger.info(f"Received credentials: {access_token}")
     # Remove "Bearer " prefix if present
