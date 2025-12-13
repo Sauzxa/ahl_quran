@@ -1,13 +1,15 @@
+import 'package:collection/collection.dart';
 import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/generic_edit_controller.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/submit_form.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/guardian.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/lecture.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/system/services/network/api_endpoints.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/dialogs/dialog.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/dialogs/guardian_from_student.dart';
+import '../../../controllers/generic_edit_controller.dart';
+import '../../../controllers/submit_form.dart';
+import '../../new_models/guardian.dart';
+import '../../new_models/lecture.dart';
+import '../../services/network/api_endpoints.dart';
+import './dialog.dart';
+import './guardian_from_student.dart';
+import '../../services/api_client.dart';
 import '../custom_container.dart';
 import '../input_field.dart';
 import '../../../controllers/validator.dart';
@@ -18,7 +20,7 @@ import '../../../controllers/generate.dart';
 import '../drop_down.dart';
 import '../../../controllers/form_controller.dart' as form;
 import './image_picker_widget.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/helpers/date_picker.dart';
+import '../../../helpers/date_picker.dart';
 
 class StudentDialog<GEC extends GenericEditController<Student>>
     extends GlobalDialog {
@@ -42,7 +44,7 @@ class _StudentDialogState<GEC extends GenericEditController<Student>>
   Rx<String?> enrollmentDate = Rxn<String>();
   Rx<String?> exitDate = Rxn<String>();
   MultiSelectResult<Lecture>? sessionResult;
-  MultiSelectResult? guardianResult;
+  MultiSelectResult<Guardian>? guardianResult;
   //late Picker imagePicker;
 
   @override
@@ -107,11 +109,6 @@ class _StudentDialogState<GEC extends GenericEditController<Student>>
         formController: formController,
         studentInfo: studentInfo,
       ),
-      HealthInfoSection(
-        formController: formController,
-        editController: editController,
-        studentInfo: studentInfo,
-      ),
       ContactInfoSection(
         formController: formController,
         studentInfo: studentInfo,
@@ -123,23 +120,49 @@ class _StudentDialogState<GEC extends GenericEditController<Student>>
       GuardianInfoSection(
         guardianResult: guardianResult,
         studentInfo: studentInfo,
-      ),
-      SubscriptionInfoSection(
-        formController: formController,
-        editController: editController,
-        studentInfo: studentInfo,
-        enrollmentDate: enrollmentDate,
-        exitDate: exitDate,
-        isExempt: isExempt,
+        onAddGuardian: () async {
+          await Get.put(form.FormController(5), tag: "وصي");
+          await Get.put(Generate());
+          final result = await Get.dialog(const GuardianDialogLite());
+
+          if (result != null) {
+            // Cast result to GuardianInfoDialog (dynamic for now to avoid import issues if not imported)
+            final dynamic newGuardianInfo = result;
+            final newGuardian = newGuardianInfo.guardian;
+
+            // Copy email from contactInfo to guardian
+            newGuardian.email = newGuardianInfo.contactInfo.email;
+
+            // Create a MultiSelectItem for the new guardian
+            final newItem = MultiSelectItem<Guardian>(
+              id: newGuardian.guardianId ?? -1, // Temporary ID or null
+              obj: newGuardian,
+              name: "${newGuardian.firstName} ${newGuardian.lastName}",
+            );
+
+            setState(() {
+              // Add to the list so it appears in the dropdown/multiselect
+              if (guardianResult == null) {
+                guardianResult = MultiSelectResult.onSuccess(items: []);
+              }
+
+              if (guardianResult?.items == null) {
+                guardianResult = MultiSelectResult.onSuccess(items: []);
+              }
+
+              guardianResult?.items?.add(newItem);
+
+              // Select it
+              studentInfo.guardian = newGuardian;
+            });
+          }
+        },
       ),
       FormalEducationSection(
         formController: formController,
         editController: editController,
         studentInfo: studentInfo,
       ),
-      ImageSection(
-        editController: editController,
-      )
     ];
   }
 
@@ -169,20 +192,42 @@ class _StudentDialogState<GEC extends GenericEditController<Student>>
 
   @override
   Future<bool> submit() async {
-    return super.editController?.model.value == null
-        ? await submitForm<Student>(
-            formKey,
-            studentInfo,
-            ApiEndpoints.submitStudentForm,
-            Student.fromJson,
-          )
-        : await submitEditDataForm<Student>(
-            formKey,
-            studentInfo,
-            ApiEndpoints.getSpecialStudent(
-                editController?.model.value?.accountInfo.accountId ?? -1),
-            Student.fromJson,
-          );
+    if (!formKey.currentState!.validate()) return false;
+    formKey.currentState!.save();
+
+    if (editController?.model.value == null) {
+      // Create Mode - Construct flat JSON for backend
+      // Create Mode - Construct JSON based on active form fields
+      final body = {
+        'personalInfo': studentInfo.personalInfo.toJson(),
+        'accountInfo': studentInfo.accountInfo.toJson(),
+        'contactInfo': studentInfo.contactInfo.toJson(),
+        'guardian': studentInfo.guardian.toJson(),
+        'lectures': studentInfo.lectures.map((e) => e.toJson()).toList(),
+        'formalEducationInfo': studentInfo.formalEducationInfo.toJson(),
+      };
+
+      try {
+        await ApiService.post(
+          ApiEndpoints.submitStudentForm,
+          body,
+          Student.fromJson,
+        );
+        return true;
+      } catch (e) {
+        dev.log("Error submitting student: $e");
+        return false;
+      }
+    } else {
+      // Edit Mode
+      return await submitEditDataForm<Student>(
+        formKey,
+        studentInfo,
+        ApiEndpoints.getSpecialStudent(
+            editController?.model.value?.accountInfo.accountId ?? -1),
+        Student.fromJson,
+      );
+    }
   }
 }
 
@@ -203,7 +248,7 @@ class SessionSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomContainer(
       headerIcon: Icons.book,
-      headerText: "الجلسة",
+      headerText: "الحلقات",
       child: MultiSelect<Lecture>(
         initialPickedItems: (editController?.model.value?.lectures ?? [])
             .map((e) => MultiSelectItem<Lecture>(
@@ -215,7 +260,7 @@ class SessionSection extends StatelessWidget {
         getPickedItems: (pickedItems) {
           studentInfo.lectures = pickedItems.map((e) => e.obj).toList();
         },
-        hintText: "البحث عن الجلسات",
+        hintText: "البحث عن الحلقات",
         preparedData: sessionResult?.items ?? [],
         maxSelectedItems: null,
       ),
@@ -404,7 +449,8 @@ class PersonalInfoSection extends StatelessWidget {
 }
 
 // Account Info Section
-class AccountInfoSection extends StatelessWidget {
+// Account Info Section
+class AccountInfoSection extends StatefulWidget {
   final form.FormController formController;
   final Student studentInfo;
 
@@ -413,6 +459,13 @@ class AccountInfoSection extends StatelessWidget {
     required this.formController,
     required this.studentInfo,
   });
+
+  @override
+  State<AccountInfoSection> createState() => _AccountInfoSectionState();
+}
+
+class _AccountInfoSectionState extends State<AccountInfoSection> {
+  bool _obscurePassword = true;
 
   @override
   Widget build(BuildContext context) {
@@ -424,9 +477,14 @@ class AccountInfoSection extends StatelessWidget {
           Expanded(
             child: InputField(
               inputTitle: "اسم المستخدم",
-              child: CustomTextField(
-                controller: formController.controllers[6],
-                onSaved: (p0) => studentInfo.accountInfo.username = p0!,
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: CustomTextField(
+                  controller: widget.formController.controllers[6],
+                  textDirection: TextDirection.ltr,
+                  onSaved: (p0) =>
+                      widget.studentInfo.accountInfo.username = p0!,
+                ),
               ),
             ),
           ),
@@ -434,9 +492,28 @@ class AccountInfoSection extends StatelessWidget {
           Expanded(
             child: InputField(
               inputTitle: "كلمة المرور",
-              child: CustomTextField(
-                controller: formController.controllers[7],
-                onSaved: (p0) => studentInfo.accountInfo.passcode = p0!,
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: CustomTextField(
+                  controller: widget.formController.controllers[7],
+                  textDirection: TextDirection.ltr,
+                  obscureText: _obscurePassword,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
+                  onSaved: (p0) =>
+                      widget.studentInfo.accountInfo.passcode = p0!,
+                ),
               ),
             ),
           ),
@@ -600,13 +677,15 @@ class ParentStatusSection extends StatelessWidget {
 
 // Guardian Info Section
 class GuardianInfoSection extends StatelessWidget {
-  final MultiSelectResult? guardianResult;
+  final MultiSelectResult<Guardian>? guardianResult;
   final Student studentInfo;
+  final VoidCallback? onAddGuardian;
 
   const GuardianInfoSection({
     super.key,
     required this.guardianResult,
     required this.studentInfo,
+    this.onAddGuardian,
   });
 
   @override
@@ -614,15 +693,11 @@ class GuardianInfoSection extends StatelessWidget {
     return CustomContainer(
       headerIcon: Icons.family_restroom,
       headerText: "معلومات عن الوصي",
-      headreActions: [
+      headerActions: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: IconButton(
-            onPressed: () async {
-              Get.put(form.FormController(5), tag: "وصي");
-              Get.put(Generate());
-              Get.dialog(const GuardianDialogLite());
-            },
+            onPressed: onAddGuardian,
             icon: Icon(
               Icons.add,
               color: Theme.of(context).iconTheme.color,
@@ -635,10 +710,10 @@ class GuardianInfoSection extends StatelessWidget {
           Expanded(
             child: InputField(
               inputTitle: "حساب الوصي",
-              child: MultiSelect(
+              child: MultiSelect<Guardian>(
                 getPickedItems: (pickedItems) {
                   if (pickedItems.isNotEmpty) {
-                    studentInfo.guardian.guardianId = pickedItems[0].id;
+                    studentInfo.guardian = pickedItems[0].obj;
                   }
                 },
                 preparedData: guardianResult?.items ?? [],
@@ -800,27 +875,19 @@ class SubscriptionInfoSection extends StatelessWidget {
   }
 
   Widget _buildExemptionPercentageDropdown() {
-    return InputField(
-      inputTitle: "نسبة الإعفاء",
-      child: Obx(() => AbsorbPointer(
-            absorbing: !isExempt.value,
-            child: Opacity(
-              opacity: isExempt.value ? 1.0 : 0.5,
-              child: DropDownWidget<double>(
-                items: exemptionPercentage,
-                initialValue: editController
-                        ?.model.value?.subscriptionInfo.exemptionPercentage ??
-                    exemptionPercentage[0],
-                onChanged: (p0) {
-                  studentInfo.subscriptionInfo.exemptionPercentage =
-                      isExempt.value ? p0 : null;
-                },
-                onSaved: (p0) =>
-                    studentInfo.subscriptionInfo.exemptionPercentage = p0,
-              ),
+    return Obx(() => Visibility(
+          visible: isExempt.value,
+          child: InputField(
+            inputTitle: "نسبة الإعفاء",
+            child: DropDownWidget(
+              items: const ["25%", "50%", "75%", "100%"],
+              initialValue: "100%", // Default
+              onSaved: (p0) {
+                // Logic to save percentage if needed
+              },
             ),
-          )),
-    );
+          ),
+        ));
   }
 }
 
@@ -840,33 +907,38 @@ class FormalEducationSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomContainer(
-      headerText: "التعليم الرسمي",
       headerIcon: Icons.school,
+      headerText: "معلومات الدراسة النظامية",
       child: Column(
         children: [
           Row(
             children: [
               Expanded(
                 child: InputField(
-                  inputTitle: "نوع المدرسة",
+                  inputTitle: "المستوى الدراسي",
                   child: DropDownWidget(
-                    items: schoolType,
-                    initialValue: editController
-                            ?.model.value?.formalEducationInfo.schoolType ??
-                        schoolType[0],
+                    items: academicLevel,
+                    initialValue: academicLevel.contains(editController
+                            ?.model.value?.formalEducationInfo.academicLevel)
+                        ? editController!
+                            .model.value!.formalEducationInfo.academicLevel
+                        : academicLevel[0],
                     onSaved: (p0) =>
-                        studentInfo.formalEducationInfo.schoolType = p0,
+                        studentInfo.formalEducationInfo.academicLevel = p0,
                   ),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: InputField(
-                  inputTitle: "اسم المدرسة",
-                  child: CustomTextField(
-                    controller: formController.controllers[13],
-                    onSaved: (p0) =>
-                        studentInfo.formalEducationInfo.schoolName = p0,
+                  inputTitle: "الصف الدراسي",
+                  child: DropDownWidget(
+                    items: grades,
+                    initialValue: grades.contains(editController
+                            ?.model.value?.formalEducationInfo.grade)
+                        ? editController!.model.value!.formalEducationInfo.grade
+                        : grades[0],
+                    onSaved: (p0) => studentInfo.formalEducationInfo.grade = p0,
                   ),
                 ),
               ),
@@ -877,27 +949,11 @@ class FormalEducationSection extends StatelessWidget {
             children: [
               Expanded(
                 child: InputField(
-                  inputTitle: "المستوى الأكاديمي",
-                  child: DropDownWidget(
-                    items: academicLevel,
-                    initialValue: editController
-                            ?.model.value?.formalEducationInfo.academicLevel ??
-                        academicLevel[0],
+                  inputTitle: "المدرسة",
+                  child: CustomTextField(
+                    controller: formController.controllers[13],
                     onSaved: (p0) =>
-                        studentInfo.formalEducationInfo.academicLevel = p0,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: InputField(
-                  inputTitle: "الصف",
-                  child: DropDownWidget(
-                    initialValue: editController
-                            ?.model.value?.formalEducationInfo.grade ??
-                        grades[0],
-                    items: grades,
-                    onSaved: (p0) => studentInfo.formalEducationInfo.grade = p0,
+                        studentInfo.formalEducationInfo.schoolName = p0,
                   ),
                 ),
               ),
@@ -909,21 +965,40 @@ class FormalEducationSection extends StatelessWidget {
   }
 }
 
-// Image Picker Widget
-
+// Image Section
 class ImageSection extends StatelessWidget {
   final GenericEditController<Student>? editController;
 
-  const ImageSection({super.key, required this.editController});
+  const ImageSection({
+    super.key,
+    required this.editController,
+  });
 
   @override
   Widget build(BuildContext context) {
     return CustomContainer(
       headerIcon: Icons.image,
-      headerText: "صورة الطالب",
-      child: ImagePickerWidget.imagePreviewWidget(
-        context,
-        editController?.model.value?.personalInfo.profileImage,
+      headerText: "الصورة الشخصية",
+      child: Column(
+        children: [
+          InputField(
+            inputTitle: "صورة",
+            child: ImagePickerWidget(
+              onImagePicked: (file) {
+                // Handle image pick
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          InputField(
+            inputTitle: "صورة الهوية الوجه 1",
+            child: ImagePickerWidget(
+              onImagePicked: (file) {
+                // Handle ID image pick
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -150,7 +150,7 @@ class _AcheivemtDialogState extends State<AcheivemtDialog> {
     return CustomContainer(
       headerText: "latest session info",
       headerIcon: Icons.person,
-      headreActions: [
+      headerActions: [
         _buildCategoryTag(
           "memorization",
           const Color(0xFFe7b05d),
@@ -216,7 +216,7 @@ class _AcheivemtDialogState extends State<AcheivemtDialog> {
     return CustomContainer(
       headerText: title,
       headerIcon: Icons.person,
-      headreActions: [
+      headerActions: [
         IconButton(
           onPressed: onAdd,
           icon: const Icon(Icons.add),

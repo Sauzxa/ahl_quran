@@ -55,17 +55,34 @@ class Student implements Model {
 
   static Student fromJson(Map<String, dynamic> json) {
     return Student()
-      ..personalInfo = PersonalInfo.fromJson(json['personalInfo'])
-      ..accountInfo = AccountInfo.fromJson(json['accountInfo'])
-      ..contactInfo = ContactInfo.fromJson(json['contactInfo'])
-      ..medicalInfo = MedicalInfo.fromJson(json['medicalInfo'])
-      ..guardian = Guardian.fromJson(json['guardian'])
-      ..student = StudentRelations.fromJson(json['student'])
-      ..lectures = (json['lectures'] as List)
-          .map((lecture) => Lecture.fromJson(lecture))
-          .toList()
-      ..formalEducationInfo =
-          FormalEducationInfo.fromJson(json['formalEducationInfo'])
-      ..subscriptionInfo = SubscriptionInfo.fromJson(json['subscriptionInfo']);
+      ..personalInfo = json['personalInfo'] != null
+          ? PersonalInfo.fromJson(json['personalInfo'])
+          : PersonalInfo()
+      ..accountInfo = json['accountInfo'] != null
+          ? AccountInfo.fromJson(json['accountInfo'])
+          : AccountInfo()
+      ..contactInfo = json['contactInfo'] != null
+          ? ContactInfo.fromJson(json['contactInfo'])
+          : ContactInfo()
+      ..medicalInfo = json['medicalInfo'] != null
+          ? MedicalInfo.fromJson(json['medicalInfo'])
+          : MedicalInfo()
+      ..guardian = json['guardian'] != null
+          ? Guardian.fromJson(json['guardian'])
+          : Guardian()
+      ..student = json['student'] != null
+          ? StudentRelations.fromJson(json['student'])
+          : StudentRelations()
+      ..lectures = json['lectures'] != null
+          ? (json['lectures'] as List)
+              .map((lecture) => Lecture.fromJson(lecture))
+              .toList()
+          : []
+      ..formalEducationInfo = json['formalEducationInfo'] != null
+          ? FormalEducationInfo.fromJson(json['formalEducationInfo'])
+          : FormalEducationInfo()
+      ..subscriptionInfo = json['subscriptionInfo'] != null
+          ? SubscriptionInfo.fromJson(json['subscriptionInfo'])
+          : SubscriptionInfo();
   }
 }

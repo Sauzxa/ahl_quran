@@ -4,14 +4,14 @@ class CustomContainer extends StatefulWidget {
   final String headerText;
   final IconData headerIcon;
   final Widget child;
-  final List<Widget>? headreActions;
+  final List<Widget>? headerActions;
 
   const CustomContainer({
     super.key,
     required this.headerText,
     required this.child,
     required this.headerIcon,
-    this.headreActions,
+    this.headerActions,
   });
 
   @override
@@ -22,53 +22,58 @@ class _CustomContainerState extends State<CustomContainer> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Using a specific teal color to match the design screenshot
+    final headerColor = const Color(0xFF2A9D8F);
 
     return Container(
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: theme.cardColor,
-        borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: theme.primaryColor, width: 0.5),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: headerColor, width: 1.5),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // Header
           Container(
-            height: 50,
+            height: 45,
             decoration: BoxDecoration(
-              color: theme.primaryColor,
+              color: headerColor,
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(5),
-                topRight: Radius.circular(5),
+                topLeft: Radius.circular(6),
+                topRight: Radius.circular(6),
               ),
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Icon(
                     widget.headerIcon,
-                    color: theme.colorScheme.onPrimary,
+                    color: Colors.white,
+                    size: 20,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Text(
                     widget.headerText,
                     style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.onPrimary,
+                      color: Colors.white,
                       fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
                   const Spacer(),
-                  if (widget.headreActions != null) ...widget.headreActions!,
+                  if (widget.headerActions != null) ...widget.headerActions!,
                 ],
               ),
             ),
           ),
           // Content
           Padding(
-            padding: const EdgeInsets.all(10.0),
+            padding: const EdgeInsets.all(16.0),
             child: widget.child,
           )
         ],

@@ -14,37 +14,29 @@ const List<String> yesNo = ["Yes", "No"];
 const List<bool> trueFalse = [true, false];
 List<String?> schoolType = ['Public', 'Private', 'International'];
 const List<String> academicLevel = [
-  "Kindergarten",
-  "Primary School",
-  "Elementary School",
-  "Middle School",
-  "High School",
-  "Undergraduate",
-  "Postgraduate",
-  "Doctorate"
+  "تحضيري",
+  "ابتدائي",
+  "متوسط",
+  "ثانوي",
+  "جامعي"
 ];
 const List<String> grades = [
-  "Grade 1",
-  "Grade 2",
-  "Grade 3",
-  "Grade 4",
-  "Grade 5",
-  "Grade 6",
-  "Grade 7",
-  "Grade 8",
-  "Grade 9",
-  "Grade 10",
-  "Grade 11",
-  "Grade 12",
-  "Undergraduate Year 1",
-  "Undergraduate Year 2",
-  "Undergraduate Year 3",
-  "Undergraduate Year 4",
-  "Master's Year 1",
-  "Master's Year 2",
-  "Doctorate Year 1",
-  "Doctorate Year 2",
-  "Doctorate Year 3"
+  "تحضيري",
+  "سنة اولى ابتدائي",
+  "سنة ثانية ابتدائي",
+  "سنة ثالثة ابتدائي",
+  "سنة رابعة ابتدائي",
+  "سنة خامسة ابتدائي",
+  "سنة اولى متوسط",
+  "سنة ثانية متوسط",
+  "سنة ثالثة متوسط",
+  "سنة رابعة متوسط",
+  "سنة اولى ثانوي",
+  "سنة ثانية ثانوي",
+  "سنة ثالثة ثانوي",
+  "ليسانس",
+  "ماستر",
+  "دكتوراه"
 ];
 List<double> exemptionPercentage = [0.0, 25, 50, 75, 100];
 const List<String> state = ["alive", "dead"];

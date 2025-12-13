@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../system/services/network/api_endpoints.dart';
 import '../routes/app_routes.dart';
 import 'profile_controller.dart';
+import 'admin_controller.dart';
 
 class AuthController extends GetxController {
   final usernameController = TextEditingController();
@@ -116,22 +117,38 @@ class AuthController extends GetxController {
     }
 
     try {
-      // Determine the correct endpoint based on role
+      // Check if this is an admin login based on selected role
+      bool isAdminLogin = role == 'admin';
+
       String endpoint;
-      if (role == 'president') {
-        endpoint = ApiEndpoints.presidentLogin;
-      } else if (role == 'supervisor' || role == 'superviser') {
-        endpoint = ApiEndpoints.supervisorLogin;
+      Map<String, dynamic> requestBody;
+
+      if (isAdminLogin) {
+        // Admin login
+        endpoint = '${ApiEndpoints.baseUrl}/auth/admin/login';
+        requestBody = {
+          "user":
+              email, // The controller is named usernameController, but holds the input value
+          "password": password,
+        };
       } else {
-        // Default to old login endpoint for other roles
-        endpoint = ApiEndpoints.login;
+        // Regular user login
+        if (role == 'president') {
+          endpoint = ApiEndpoints.presidentLogin;
+        } else if (role == 'supervisor' || role == 'superviser') {
+          endpoint = ApiEndpoints.supervisorLogin;
+        } else {
+          // Default to old login endpoint for other roles
+          endpoint = ApiEndpoints.login;
+        }
+        requestBody = {
+          "email": email,
+          "password": password,
+        };
       }
 
       final url = Uri.parse(endpoint);
-      final body = jsonEncode({
-        "email": email,
-        "password": password,
-      });
+      final body = jsonEncode(requestBody);
 
       print('Sending login request to $url with body: $body');
 
@@ -145,12 +162,44 @@ class AuthController extends GetxController {
       print('Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Success - extract user data from login response
         final responseData = jsonDecode(response.body);
 
         print('Full response data: $responseData');
 
-        // Get user data from response
+        // Check if this is admin login
+        if (isAdminLogin && responseData['access_token'] != null) {
+          // Admin login successful
+          final adminController = Get.put(AdminController());
+
+          // Set token and wait for fetch to complete
+          adminController.adminToken.value = responseData['access_token'];
+
+          print('Admin token set: ${adminController.adminToken.value}');
+
+          // Fetch pending presidents before navigation
+          await adminController.fetchPendingPresidents();
+
+          print('Navigating to admin dashboard...');
+
+          // Navigate to admin dashboard first
+          Get.offAllNamed(Routes.adminDashboard);
+
+          // Then show success message after a short delay
+          Future.delayed(const Duration(milliseconds: 300), () {
+            Get.snackbar(
+              'تم تسجيل الدخول بنجاح',
+              'مرحباً بك في لوحة تحكم المسؤول',
+              snackPosition: SnackPosition.TOP,
+              backgroundColor: Get.theme.colorScheme.primary,
+              colorText: Get.theme.colorScheme.onPrimary,
+              duration: const Duration(seconds: 2),
+            );
+          });
+
+          return;
+        }
+
+        // Regular user login
         String firstName = '';
         String lastName = '';
         if (responseData['user'] != null) {
@@ -170,6 +219,7 @@ class AuthController extends GetxController {
           email: email,
           first: firstName,
           last: lastName,
+          accessToken: responseData['access_token'],
         );
 
         print(
@@ -240,17 +290,20 @@ class AuthController extends GetxController {
       final profileController = Get.find<ProfileController>();
       await profileController.clearProfile();
 
-      final url = Uri.parse(ApiEndpoints.logout);
-      // Assuming you might need to send a token or session ID, but for now just a POST
-      final response = await http.post(url);
+      // Since the backend uses JWTs without a blacklist/logout endpoint,
+      // we just clear the token locally and navigate to login.
+      // If a backend logout endpoint is added later, uncomment the code below.
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.offAllNamed(Routes.logIn);
-      } else {
-        // Even if it fails on server, we might want to clear local state and logout on client
+      /*
+      final url = Uri.parse(ApiEndpoints.logout);
+      final response = await http.post(url);
+      
+      if (response.statusCode != 200 && response.statusCode != 201) {
         print('Logout failed on server: ${response.body}');
-        Get.offAllNamed(Routes.logIn);
       }
+      */
+
+      Get.offAllNamed(Routes.logIn);
     } catch (e) {
       print('Logout error: $e');
       // Force logout on client side

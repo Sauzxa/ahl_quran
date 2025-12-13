@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "ahlQuran_Front",
+            "cwd": "ahlQuran_Front",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "ahlQuran_Front (profile mode)",
+            "cwd": "ahlQuran_Front",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "ahlQuran_Front (release mode)",
+            "cwd": "ahlQuran_Front",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }
+    ]
+}

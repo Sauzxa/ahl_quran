@@ -26,9 +26,7 @@ class FormalEducationInfo implements Model {
 
   @override
   Map<String, dynamic> toJson() => {
-        'student_id': studentId,
         'school_name': schoolName,
-        'school_type': schoolType,
         'grade': grade,
         'academic_level': academicLevel,
       };

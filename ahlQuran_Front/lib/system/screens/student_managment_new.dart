@@ -6,6 +6,8 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/student.
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/dialogs/student.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/three_bounce.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/error_illustration.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/drawer_controller.dart'
+    as drawer;
 import 'base_layout.dart';
 
 class StudentManagementScreen extends GetView<StudentManagementController> {
@@ -13,8 +15,19 @@ class StudentManagementScreen extends GetView<StudentManagementController> {
 
   @override
   Widget build(BuildContext context) {
+    // Ensure sidebar is selecting "Students"
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        if (Get.isRegistered<drawer.DrawerController>()) {
+          Get.find<drawer.DrawerController>().changeSelectedIndex(4);
+        }
+      } catch (e) {
+        // Ignore error if controller not found
+      }
+    });
+
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: BaseLayout(
@@ -23,19 +36,19 @@ class StudentManagementScreen extends GetView<StudentManagementController> {
           children: [
             // Golden header bar
             _buildHeaderBar(theme),
-            
+
             const SizedBox(height: 16),
-            
+
             // Search and filters
             _buildSearchAndFilters(theme),
-            
+
             const SizedBox(height: 16),
-            
+
             // Action buttons
             _buildActionButtons(theme),
-            
+
             const SizedBox(height: 16),
-            
+
             // Students table
             Expanded(
               child: _buildStudentsTable(theme),
@@ -52,12 +65,7 @@ class StudentManagementScreen extends GetView<StudentManagementController> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.amber.shade700,
-            Colors.amber.shade600,
-          ],
-        ),
+        color: const Color(0xFFDEB059), // Muted gold/orange from theme
         borderRadius: BorderRadius.circular(8),
       ),
       child: const Row(
@@ -86,46 +94,46 @@ class StudentManagementScreen extends GetView<StudentManagementController> {
           Expanded(
             flex: 2,
             child: Obx(() => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                border: Border.all(color: theme.dividerColor),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<int?>(
-                  value: controller.selectedLecture.value?.lectureId,
-                  hint: const Text('الحلقة: جميع الحلقات'),
-                  isExpanded: true,
-                  items: [
-                    const DropdownMenuItem<int?>(
-                      value: null,
-                      child: Text('جميع الحلقات'),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    border: Border.all(color: theme.dividerColor),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<int?>(
+                      value: controller.selectedLecture.value?.lectureId,
+                      hint: const Text('الحلقة: جميع الحلقات'),
+                      isExpanded: true,
+                      items: [
+                        const DropdownMenuItem<int?>(
+                          value: null,
+                          child: Text('جميع الحلقات'),
+                        ),
+                        ...controller.lectures.map((lecture) {
+                          return DropdownMenuItem<int?>(
+                            value: lecture.lectureId,
+                            child: Text(lecture.lectureNameAr ?? 'غير محدد'),
+                          );
+                        }),
+                      ],
+                      onChanged: (value) {
+                        if (value == null) {
+                          controller.updateLectureFilter(null);
+                        } else {
+                          final lecture = controller.lectures.firstWhere(
+                            (l) => l.lectureId == value,
+                          );
+                          controller.updateLectureFilter(lecture);
+                        }
+                      },
                     ),
-                    ...controller.lectures.map((lecture) {
-                      return DropdownMenuItem<int?>(
-                        value: lecture.lectureId,
-                        child: Text(lecture.lectureNameAr ?? 'غير محدد'),
-                      );
-                    }),
-                  ],
-                  onChanged: (value) {
-                    if (value == null) {
-                      controller.updateLectureFilter(null);
-                    } else {
-                      final lecture = controller.lectures.firstWhere(
-                        (l) => l.lectureId == value,
-                      );
-                      controller.updateLectureFilter(lecture);
-                    }
-                  },
-                ),
-              ),
-            )),
+                  ),
+                )),
           ),
-          
+
           const SizedBox(width: 16),
-          
+
           // Search field
           Expanded(
             flex: 3,
@@ -153,71 +161,114 @@ class StudentManagementScreen extends GetView<StudentManagementController> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          // Export buttons
-          _buildExportButton('إظهار 10 أسطر', Icons.list, theme),
-          const SizedBox(width: 8),
-          _buildExportButton('Excel', Icons.table_chart, theme, 
-            color: Colors.green.shade700),
-          const SizedBox(width: 8),
-          _buildExportButton('إظهار+', Icons.add_chart, theme),
-          const SizedBox(width: 8),
-          _buildExportButton('طباعة', Icons.print, theme),
-          
-          const Spacer(),
-          
-          // Main action buttons
-          Obx(() => _buildActionButton(
-            'إلغاء',
-            Icons.cancel_outlined,
-            theme,
-            onPressed: controller.selectedStudents.isNotEmpty
-                ? () => controller.clearSelections()
-                : null,
-            color: Colors.grey.shade400,
-          )),
-          const SizedBox(width: 8),
-          Obx(() => _buildActionButton(
-            'حذف',
-            Icons.delete_outline,
-            theme,
-            onPressed: controller.selectedStudents.isNotEmpty
-                ? () => _showDeleteConfirmation()
-                : null,
-            color: Colors.red.shade400,
-          )),
-          const SizedBox(width: 8),
-          _buildActionButton(
-            'تعديل',
-            Icons.edit_outlined,
-            theme,
-            onPressed: () {
-              // Edit selected student (first one if multiple)
-              if (controller.selectedStudents.isNotEmpty) {
-                _showEditStudentDialog(controller.selectedStudents.first);
-              }
-            },
-            color: Colors.orange.shade600,
-          ),
-          const SizedBox(width: 8),
+          // Right Side (Start) - Action Buttons
+
+          // Add (Filled)
           _buildActionButton(
             'إضافة',
             Icons.add,
             theme,
             onPressed: () => _showAddStudentDialog(),
-            color: Colors.amber.shade700,
+            color: const Color(0xFFC78D20), // Primary theme color
           ),
+          const SizedBox(width: 8),
+
+          // Edit (Outlined)
+          Obx(() => _buildExportButton(
+                'تعديل',
+                Icons.edit_outlined,
+                theme,
+                onPressed: controller.selectedStudents.isNotEmpty
+                    ? () => _showEditStudentDialog(
+                        controller.selectedStudents.first)
+                    : null,
+              )),
+          const SizedBox(width: 8),
+
+          // Duplicate (Outlined)
+          _buildExportButton(
+            'تكرار',
+            Icons.copy,
+            theme,
+            onPressed: () {
+              // TODO: Implement duplicate
+            },
+          ),
+          const SizedBox(width: 8),
+
+          // Delete (Outlined)
+          Obx(() => _buildExportButton(
+                'حذف',
+                Icons.delete_outline,
+                theme,
+                onPressed: controller.selectedStudents.isNotEmpty
+                    ? () => _showDeleteConfirmation()
+                    : null,
+                color: Colors.red.shade400, // Red outline/text
+              )),
+          const SizedBox(width: 8),
+
+          // Select All (Filled)
+          _buildActionButton(
+            'تحديد الكل',
+            Icons.select_all,
+            theme,
+            onPressed: () {
+              // controller.selectAll(); // TODO: Implement in controller
+              // For now, select all loaded students
+              for (var s in controller.filteredStudents) {
+                if (!controller.isStudentSelected(s)) {
+                  controller.toggleStudentSelection(s);
+                }
+              }
+            },
+            color: const Color(0xFFC78D20), // Primary theme color
+          ),
+          const SizedBox(width: 8),
+
+          // Cancel (Outlined)
+          Obx(() => _buildExportButton(
+                'إلغاء',
+                Icons.cancel_outlined,
+                theme,
+                onPressed: controller.selectedStudents.isNotEmpty
+                    ? () => controller.clearSelections()
+                    : null,
+                color: Colors.grey.shade600,
+              )),
+
+          const Spacer(),
+
+          // Left Side (End) - Export Buttons
+
+          // Print
+          _buildExportButton('طباعة', Icons.print, theme),
+          const SizedBox(width: 8),
+
+          // Show+
+          _buildExportButton('إظهار+', Icons.add_chart, theme),
+          const SizedBox(width: 8),
+
+          // Excel
+          _buildExportButton('Excel', Icons.table_chart, theme,
+              color: Colors.green.shade700),
+          const SizedBox(width: 8),
+
+          // Show 10
+          _buildExportButton('إظهار 10 أسطر', Icons.list, theme),
         ],
       ),
     );
   }
 
-  Widget _buildExportButton(String text, IconData icon, ThemeData theme, {Color? color}) {
+  Widget _buildExportButton(String text, IconData icon, ThemeData theme,
+      {Color? color, VoidCallback? onPressed}) {
     return OutlinedButton.icon(
-      onPressed: () {
-        // TODO: Implement export functionality
-      },
+      onPressed: onPressed ??
+          () {
+            // TODO: Implement export functionality
+          },
       icon: Icon(icon, size: 18),
       label: Text(text),
       style: OutlinedButton.styleFrom(
@@ -321,56 +372,62 @@ class StudentManagementScreen extends GetView<StudentManagementController> {
           child: const Icon(Icons.check_box_outline_blank, color: Colors.white),
         ),
       ),
-      
+
       // Action button column
       GridColumn(
         columnName: 'action',
         width: 80,
-        label: _buildHeaderCell('نوع الهوية'),
+        label: _buildHeaderCell(''), // Empty label for action column
       ),
-      
+
       GridColumn(
         columnName: 'name',
         label: _buildHeaderCell('الاسم'),
       ),
-      
+
       GridColumn(
-        columnName: 'sex',
+        columnName: 'nickname', // Changed from 'sex'
         width: 100,
         label: _buildHeaderCell('الكنية'),
       ),
-      
+
       GridColumn(
         columnName: 'gender',
         width: 100,
         label: _buildHeaderCell('الجنس'),
       ),
-      
+
       GridColumn(
         columnName: 'lectures',
         label: _buildHeaderCell('الحلقات'),
       ),
-      
+
       GridColumn(
         columnName: 'username',
         label: _buildHeaderCell('اسم المستخدم'),
       ),
-      
+
       GridColumn(
         columnName: 'dob',
         width: 120,
         label: _buildHeaderCell('تاريخ الميلاد'),
       ),
-      
+
       GridColumn(
         columnName: 'birthplace',
         label: _buildHeaderCell('مكان الميلاد'),
       ),
-      
+
       GridColumn(
         columnName: 'nationality',
         width: 120,
         label: _buildHeaderCell('الجنسية'),
+      ),
+
+      GridColumn(
+        columnName: 'id_type',
+        width: 100,
+        label: _buildHeaderCell('نوع الهوية'),
       ),
     ];
   }
@@ -434,9 +491,9 @@ class StudentManagementScreen extends GetView<StudentManagementController> {
                   ),
                 ],
               ),
-              
+
               const Divider(height: 32),
-              
+
               // Student image
               Center(
                 child: CircleAvatar(
@@ -445,19 +502,27 @@ class StudentManagementScreen extends GetView<StudentManagementController> {
                   child: const Icon(Icons.person, size: 50, color: Colors.grey),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Student details
-              _buildDetailRow('الاسم:', '${student.personalInfo.firstNameAr ?? ''}'),
-              _buildDetailRow('الكنية:', '${student.personalInfo.lastNameAr ?? ''}'),
+              _buildDetailRow(
+                  'الاسم:', '${student.personalInfo.firstNameAr ?? ''}'),
+              _buildDetailRow(
+                  'الكنية:', '${student.personalInfo.lastNameAr ?? ''}'),
               _buildDetailRow('الجنس:', '${student.personalInfo.sex ?? ''}'),
-              _buildDetailRow('الحلقات:', student.lectures.map((l) => l.lectureNameAr).join(', ')),
-              _buildDetailRow('اسم المستخدم:', '${student.accountInfo.username ?? ''}'),
-              _buildDetailRow('تاريخ الميلاد:', '${student.personalInfo.dateOfBirth ?? ''}'),
-              _buildDetailRow('مكان الميلاد:', '${student.personalInfo.placeOfBirth ?? ''}'),
-              _buildDetailRow('الجنسية:', '${student.personalInfo.nationality ?? ''}'),
-              _buildDetailRow('نوع الهوية:', student.personalInfo.sex == 'ذكر' ? 'ذكر' : 'أنثى'),
+              _buildDetailRow('الحلقات:',
+                  student.lectures.map((l) => l.lectureNameAr).join(', ')),
+              _buildDetailRow(
+                  'اسم المستخدم:', '${student.accountInfo.username ?? ''}'),
+              _buildDetailRow('تاريخ الميلاد:',
+                  '${student.personalInfo.dateOfBirth ?? ''}'),
+              _buildDetailRow('مكان الميلاد:',
+                  '${student.personalInfo.placeOfBirth ?? ''}'),
+              _buildDetailRow(
+                  'الجنسية:', '${student.personalInfo.nationality ?? ''}'),
+              _buildDetailRow('نوع الهوية:',
+                  student.personalInfo.sex == 'ذكر' ? 'ذكر' : 'أنثى'),
             ],
           ),
         ),
@@ -503,9 +568,9 @@ class StudentManagementScreen extends GetView<StudentManagementController> {
           textAlign: TextAlign.right,
         ),
         content: Obx(() => Text(
-          'هل أنت متأكد من حذف ${controller.selectedStudents.length} طالب؟',
-          textAlign: TextAlign.right,
-        )),
+              'هل أنت متأكد من حذف ${controller.selectedStudents.length} طالب؟',
+              textAlign: TextAlign.right,
+            )),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
@@ -566,56 +631,63 @@ class _StudentDataSource extends DataGridSource {
         cells: [
           // Selection checkbox
           DataGridCell<Student>(columnName: 'selection', value: student),
-          
+
           // Action button
           DataGridCell<Student>(columnName: 'action', value: student),
-          
+
           // Name
           DataGridCell<String>(
             columnName: 'name',
-            value: '${student.personalInfo.firstNameAr ?? ''} ${student.personalInfo.lastNameAr ?? ''}',
+            value:
+                '${student.personalInfo.firstNameAr ?? ''} ${student.personalInfo.lastNameAr ?? ''}',
           ),
-          
-          // Last name
+
+          // Nickname (Last name)
           DataGridCell<String>(
-            columnName: 'sex',
+            columnName: 'nickname',
             value: student.personalInfo.lastNameAr ?? '',
           ),
-          
+
           // Gender
           DataGridCell<String>(
             columnName: 'gender',
             value: student.personalInfo.sex ?? '',
           ),
-          
+
           // Lectures
           DataGridCell<String>(
             columnName: 'lectures',
             value: student.lectures.map((l) => l.lectureNameAr).join(', '),
           ),
-          
+
           // Username
           DataGridCell<String>(
             columnName: 'username',
             value: student.accountInfo.username ?? '',
           ),
-          
+
           // Date of birth
           DataGridCell<String>(
             columnName: 'dob',
             value: student.personalInfo.dateOfBirth ?? '',
           ),
-          
+
           // Place of birth
           DataGridCell<String>(
             columnName: 'birthplace',
             value: student.personalInfo.placeOfBirth ?? '',
           ),
-          
+
           // Nationality
           DataGridCell<String>(
             columnName: 'nationality',
             value: student.personalInfo.nationality ?? '',
+          ),
+
+          // ID Type
+          DataGridCell<String>(
+            columnName: 'id_type',
+            value: '', // Placeholder as field might not exist yet
           ),
         ],
       );
@@ -629,21 +701,21 @@ class _StudentDataSource extends DataGridSource {
   DataGridRowAdapter buildRow(DataGridRow row) {
     final student = row.getCells()[0].value as Student;
     final isSelected = controller.isStudentSelected(student);
-    
+
     return DataGridRowAdapter(
       color: isSelected ? Colors.teal.shade50 : null,
       cells: row.getCells().map<Widget>((cell) {
         if (cell.columnName == 'selection') {
           return Center(
-            child: Checkbox(
-              value: isSelected,
-              onChanged: (value) {
-                controller.toggleStudentSelection(student);
-              },
-            ),
+            child: Obx(() => Checkbox(
+                  value: controller.isStudentSelected(student),
+                  onChanged: (value) {
+                    controller.toggleStudentSelection(student);
+                  },
+                )),
           );
         }
-        
+
         if (cell.columnName == 'action') {
           return Center(
             child: IconButton(
@@ -653,7 +725,7 @@ class _StudentDataSource extends DataGridSource {
             ),
           );
         }
-        
+
         return Container(
           alignment: Alignment.center,
           padding: const EdgeInsets.all(8),
@@ -667,4 +739,3 @@ class _StudentDataSource extends DataGridSource {
     );
   }
 }
-

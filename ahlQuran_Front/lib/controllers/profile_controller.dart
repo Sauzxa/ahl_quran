@@ -8,6 +8,7 @@ class ProfileController extends GetxController {
   final lastName = ''.obs;
   final userRole = ''.obs;
   final userEmail = ''.obs;
+  final token = ''.obs;
 
   final _storage = const FlutterSecureStorage();
 
@@ -25,6 +26,7 @@ class ProfileController extends GetxController {
     final storedEmail = await _storage.read(key: 'userEmail');
     final storedRole = await _storage.read(key: 'userRole');
     final storedAvatar = await _storage.read(key: 'avatarPath');
+    final storedToken = await _storage.read(key: 'token');
 
     if (storedFirstName != null) firstName.value = storedFirstName;
     if (storedLastName != null) lastName.value = storedLastName;
@@ -32,6 +34,7 @@ class ProfileController extends GetxController {
     if (storedEmail != null) userEmail.value = storedEmail;
     if (storedRole != null) userRole.value = storedRole;
     if (storedAvatar != null) avatarPath.value = storedAvatar;
+    if (storedToken != null) token.value = storedToken;
   }
 
   Future<void> updateProfile({
@@ -41,6 +44,7 @@ class ProfileController extends GetxController {
     String? email,
     String? first,
     String? last,
+    String? accessToken,
   }) async {
     avatarPath.value = avatar;
     userName.value = name;
@@ -48,6 +52,7 @@ class ProfileController extends GetxController {
     if (email != null) userEmail.value = email;
     if (first != null) firstName.value = first;
     if (last != null) lastName.value = last;
+    if (accessToken != null) token.value = accessToken;
 
     // Save to secure storage
     await _storage.write(key: 'avatarPath', value: avatar);
@@ -56,6 +61,8 @@ class ProfileController extends GetxController {
     if (email != null) await _storage.write(key: 'userEmail', value: email);
     if (first != null) await _storage.write(key: 'firstName', value: first);
     if (last != null) await _storage.write(key: 'lastName', value: last);
+    if (accessToken != null)
+      await _storage.write(key: 'token', value: accessToken);
   }
 
   Future<void> clearProfile() async {

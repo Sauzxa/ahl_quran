@@ -13,8 +13,9 @@ class InputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    // Match the teal color from CustomContainer
+    final labelColor = const Color(0xFF2A9D8F);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -22,11 +23,12 @@ class InputField extends StatelessWidget {
         Text(
           inputTitle,
           style: textTheme.titleSmall?.copyWith(
-            color: colorScheme.primary,
+            color: labelColor,
             fontWeight: FontWeight.bold,
+            fontSize: 14,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         child
       ],
     );
@@ -45,6 +47,7 @@ class CustomTextField extends StatelessWidget {
   final TextDirection textDirection;
   final bool readOnly;
   final void Function()? onTap;
+  final Widget? suffixIcon; // NEW
 
   const CustomTextField({
     super.key,
@@ -59,6 +62,7 @@ class CustomTextField extends StatelessWidget {
     this.onChanged,
     this.readOnly = false,
     this.onTap,
+    this.suffixIcon,
   });
 
   @override
@@ -78,13 +82,14 @@ class CustomTextField extends StatelessWidget {
       textDirection: textDirection,
       obscureText: obscureText,
       maxLines: maxLines,
-      readOnly: readOnly, // NEW
-      onTap: onTap, // NEW
+      readOnly: readOnly,
+      onTap: onTap,
       decoration: InputDecoration(
         border: OutlineInputBorder(),
         enabledBorder: Theme.of(context).inputDecorationTheme.enabledBorder,
         focusedBorder: Theme.of(context).inputDecorationTheme.focusedBorder,
         hoverColor: Theme.of(context).inputDecorationTheme.hoverColor,
+        suffixIcon: suffixIcon, // NEW
       ),
       style: TextStyle(
         color: Theme.of(context).textTheme.bodySmall?.color,

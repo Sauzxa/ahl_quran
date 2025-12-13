@@ -4,6 +4,7 @@ class Guardian implements Model {
   dynamic guardianId;
   dynamic firstName;
   dynamic lastName;
+  dynamic email;
   dynamic dateOfBirth;
   dynamic relationship;
   dynamic guardianContactId;
@@ -16,6 +17,7 @@ class Guardian implements Model {
     this.guardianId,
     this.firstName,
     this.lastName,
+    this.email,
     this.dateOfBirth,
     this.relationship,
     this.guardianContactId,
@@ -29,6 +31,7 @@ class Guardian implements Model {
         guardianId: json['guardian_id'],
         firstName: json['first_name'],
         lastName: json['last_name'],
+        email: json['email'],
         dateOfBirth: json['date_of_birth'],
         relationship: json['relationship'],
         guardianContactId: json['guardian_contact_id'],
@@ -43,6 +46,7 @@ class Guardian implements Model {
         'guardian_id': guardianId,
         'first_name': firstName,
         'last_name': lastName,
+        'email': email,
         'date_of_birth': dateOfBirth,
         'relationship': relationship,
         'guardian_contact_id': guardianContactId,
@@ -62,6 +66,7 @@ class Guardian implements Model {
     return guardianId != null &&
         firstName != null &&
         lastName != null &&
+        email != null &&
         dateOfBirth != null &&
         relationship != null &&
         guardianContactId != null &&

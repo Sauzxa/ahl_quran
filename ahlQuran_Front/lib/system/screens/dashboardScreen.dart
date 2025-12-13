@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/dashboardtile.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/header.dart';
 import './base_layout.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/student_managment.dart';
+
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_teachers.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/guardian_managment.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/lecture_managment.dart';
@@ -13,13 +13,15 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_
 import 'package:the_doctarine_of_the_ppl_of_the_quran/screens/report1_screen.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/stats/stat1.dart';
 
+import 'package:the_doctarine_of_the_ppl_of_the_quran/routes/app_routes.dart';
+
 final List<DashboardTileConfig> tiles = [
   DashboardTileConfig(
     label: 'الطلاب',
     count: '59',
     icon: Icons.people,
     bigIcon: Icons.people,
-    page: () => const AddStudent(),
+    route: Routes.addStudent,
   ),
   DashboardTileConfig(
     label: 'المعلمين',
@@ -152,6 +154,7 @@ class DashboardPage extends StatelessWidget {
                       icon: displayedTiles[index].icon,
                       bigIcon: displayedTiles[index].bigIcon,
                       page: displayedTiles[index].page,
+                      route: displayedTiles[index].route,
                       count: displayedTiles[index].count,
                       isWide: displayedTiles[index].isWide,
                       backgroundColor: backgroundColor,

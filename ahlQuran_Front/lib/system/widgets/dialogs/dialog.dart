@@ -85,7 +85,7 @@ abstract class DialogState<GEC extends GenericEditController>
     return ConstrainedBox(
       constraints: BoxConstraints(
         minWidth: 300,
-        maxWidth: Get.width * 0.55,
+        maxWidth: Get.width * 0.45,
       ),
       child: Dialog(
         shape: RoundedRectangleBorder(
@@ -121,16 +121,21 @@ abstract class DialogState<GEC extends GenericEditController>
                   ),
                   child: Form(
                     key: formKey,
-                    child: ListView.separated(
+                    child: SingleChildScrollView(
                       controller: scrollController,
                       padding: const EdgeInsets.all(20),
-                      shrinkWrap: true,
                       physics: const AlwaysScrollableScrollPhysics(),
-                      itemCount: sections.length,
-                      itemBuilder: (context, index) => RepaintBoundary(
-                        child: sections[index],
+                      child: Column(
+                        children: [
+                          for (int i = 0; i < sections.length; i++) ...[
+                            RepaintBoundary(
+                              child: sections[i],
+                            ),
+                            if (i < sections.length - 1)
+                              const SizedBox(height: 10),
+                          ],
+                        ],
                       ),
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
                     ),
                   ),
                 );

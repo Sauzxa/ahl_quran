@@ -1,115 +1,103 @@
 import 'dart:developer' as dev;
-import 'dart:typed_data';
-import 'dart:io' show File;
+import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:get/get.dart';
 
-import 'platform_utils.dart';
+class ImagePickerWidget extends StatefulWidget {
+  final Function(File?) onImagePicked;
+  final String? initialImageUrl;
 
-class PickedImage {
-  final Uint8List? bytes;
-  final File? file;
+  const ImagePickerWidget({
+    super.key,
+    required this.onImagePicked,
+    this.initialImageUrl,
+  });
 
-  PickedImage({this.file, this.bytes});
-  bool get isValid => file != null;
+  @override
+  State<ImagePickerWidget> createState() => _ImagePickerWidgetState();
 }
 
-class ImagePickerWidget {
-  static const int maxImageSizeBytes = 5 * 1024 * 1024;
+class _ImagePickerWidgetState extends State<ImagePickerWidget> {
+  File? _pickedImage;
+  final ImagePicker _picker = ImagePicker();
 
-  static Future<PickedImage?> pickImage(
-      BuildContext context, ImageSource source) async {
+  Future<void> _pickImage() async {
     try {
-      if (!PlatformUtils.isDesktop) {
-        Get.snackbar('Unsupported', 'Only available on desktop');
-        return null;
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        setState(() {
+          _pickedImage = File(image.path);
+        });
+        widget.onImagePicked(_pickedImage);
       }
-
-      final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(
-        source: source,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
-      );
-      if (pickedFile == null) return null;
-
-      File file = File(pickedFile.path);
-      if (file.lengthSync() > maxImageSizeBytes) {
-        Get.snackbar('Error', 'Image size exceeds 5MB');
-        return null;
-      }
-
-      return PickedImage(file: file);
-    } catch (e, stackTrace) {
-      dev.log('Image pick failed', error: e, stackTrace: stackTrace);
+    } catch (e) {
+      dev.log('Error picking image: $e');
       Get.snackbar('Error', 'Failed to pick image');
-      return null;
     }
   }
 
-  static Widget imagePreviewWidget(BuildContext context, File? image) {
-    final theme = Theme.of(context);
-    if (!PlatformUtils.isDesktop) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(color: theme.dividerColor),
-          borderRadius: BorderRadius.circular(8),
-          color: theme.cardColor,
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          height: 150,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: _pickedImage != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(
+                    _pickedImage!,
+                    fit: BoxFit.cover,
+                  ),
+                )
+              : widget.initialImageUrl != null &&
+                      widget.initialImageUrl!.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        widget.initialImageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Center(child: Icon(Icons.error)),
+                      ),
+                    )
+                  : Center(
+                      child: Text(
+                        'لم يتم رفع أي ملف',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                    ),
         ),
-        child: Text(
-          'Image preview is only available on desktop',
-          style: theme.textTheme.bodyMedium,
-          textAlign: TextAlign.center,
-        ),
-      );
-    }
-
-    if (image == null) {
-      return Container(
-        constraints: const BoxConstraints(maxHeight: 400, maxWidth: 400),
-        decoration: BoxDecoration(
-          border: Border.all(color: theme.dividerColor),
-          borderRadius: BorderRadius.circular(8),
-          color: theme.cardColor,
-        ),
-        child: Center(
-          child: Text(
-            'No image selected',
-            style: theme.textTheme.bodyMedium,
-            textAlign: TextAlign.center,
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: _pickImage,
+            icon: const Icon(Icons.upload_file),
+            label: const Text('Choose file'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  const Color(0xFF2A9D8F), // Teal color from screenshot
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
           ),
         ),
-      );
-    }
-
-    return Container(
-      constraints: const BoxConstraints(maxHeight: 400, maxWidth: 400),
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.dividerColor),
-        borderRadius: BorderRadius.circular(8),
-        color: theme.cardColor,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.file(
-          image,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) {
-            return Center(
-              child: Text(
-                'Failed to load image',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.error,
-                ),
-              ),
-            );
-          },
+        const SizedBox(height: 4),
+        const Text(
+          'قم بسحب وإسقاط ملف هنا للتحميل',
+          style: TextStyle(fontSize: 12, color: Colors.grey),
         ),
-      ),
+      ],
     );
   }
 }

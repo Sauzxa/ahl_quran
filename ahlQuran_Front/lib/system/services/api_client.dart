@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:developer' as code;
 import 'package:http/http.dart' as http;
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:get/get.dart';
+import '../../controllers/profile_controller.dart';
 
 class NoNetworkException implements Exception {
   final String message;
@@ -18,9 +20,26 @@ class NoInternetException implements Exception {
 }
 
 class ApiService {
-  static const Map<String, String> defaultHeaders = {
-    'Content-Type': 'application/json'
-  };
+  static Map<String, String> get defaultHeaders {
+    final headers = {
+      'Content-Type': 'application/json; charset=UTF-8',
+      'Accept': 'application/json; charset=UTF-8',
+    };
+
+    try {
+      // Try to get token from ProfileController if available
+      if (Get.isRegistered<ProfileController>()) {
+        final token = Get.find<ProfileController>().token.value;
+        if (token.isNotEmpty) {
+          headers['Authorization'] = 'Bearer $token';
+        }
+      }
+    } catch (e) {
+      // Ignore if controller not found
+    }
+
+    return headers;
+  }
 
   static Uri _buildUri(String endpoint) => Uri.parse(endpoint);
 
@@ -50,9 +69,10 @@ class ApiService {
         final response =
             await http.get(_buildUri(endpoint), headers: defaultHeaders);
 
-        _log('Response (${response.statusCode}): ${response.body}');
+        _log(
+            'Response (${response.statusCode}): ${utf8.decode(response.bodyBytes)}');
         if (response.statusCode == 200) {
-          final data = json.decode(response.body);
+          final data = json.decode(utf8.decode(response.bodyBytes));
           return fromJson(data);
         } else {
           throw Exception('GET $endpoint failed: ${response.statusCode}');
@@ -61,28 +81,39 @@ class ApiService {
 
   static Future<List<T>> fetchList<T>(
     String endpoint,
-    T Function(Map<String, dynamic>) fromJson,  // fromJson build in function to converts each item form the json after parsing it
+    T Function(Map<String, dynamic>)
+        fromJson, // fromJson build in function to converts each item form the json after parsing it
   ) =>
-  // check connection first
+      // check connection first
       _withConnection(() async {
         // log request if debug mode
         _log('GET $endpoint');
         final response =
-        // parse it to json using Uri build in class
+            // parse it to json using Uri build in class
             await http.get(_buildUri(endpoint), headers: defaultHeaders);
 
-        _log('Response (${response.statusCode}): ${response.body}');
+        _log(
+            'Response (${response.statusCode}): ${utf8.decode(response.bodyBytes)}');
         if (response.statusCode == 200) {
-          final data = json.decode(response.body);
+          final data = json.decode(utf8.decode(response.bodyBytes));
           if (data is List) {
             return data.map((item) => fromJson(item)).toList();
-          } else if (data['data'] is List) {
-            return (data['data'] as List)
-                .map((item) => fromJson(item))
-                .toList();
-          } else {
-            throw Exception('Expected a list but got: $data');
+          } else if (data is Map<String, dynamic>) {
+            // Check for common wrapper keys
+            if (data['data'] is List) {
+              return (data['data'] as List)
+                  .map((item) => fromJson(item))
+                  .toList();
+            }
+            // Fallback: look for any list in the values (e.g. 'students', 'teachers')
+            for (final value in data.values) {
+              if (value is List) {
+                return (value as List).map((item) => fromJson(item)).toList();
+              }
+            }
           }
+
+          throw Exception('Expected a list but got: $data');
         } else {
           throw Exception('GET $endpoint failed: ${response.statusCode}');
         }
@@ -101,9 +132,10 @@ class ApiService {
           body: json.encode(body),
         );
 
-        _log('Response (${response.statusCode}): ${response.body}');
+        _log(
+            'Response (${response.statusCode}): ${utf8.decode(response.bodyBytes)}');
         if (response.statusCode == 200 || response.statusCode == 201) {
-          final data = json.decode(response.body);
+          final data = json.decode(utf8.decode(response.bodyBytes));
           return fromJson(data);
         } else {
           throw Exception('POST $endpoint failed: ${response.statusCode}');
@@ -123,9 +155,10 @@ class ApiService {
           body: json.encode(body),
         );
 
-        _log('Response (${response.statusCode}): ${response.body}');
+        _log(
+            'Response (${response.statusCode}): ${utf8.decode(response.bodyBytes)}');
         if (response.statusCode == 200) {
-          final data = json.decode(response.body);
+          final data = json.decode(utf8.decode(response.bodyBytes));
           return fromJson(data);
         } else {
           throw Exception(
@@ -146,9 +179,10 @@ class ApiService {
           body: json.encode(body),
         );
 
-        _log('Response (${response.statusCode}): ${response.body}');
+        _log(
+            'Response (${response.statusCode}): ${utf8.decode(response.bodyBytes)}');
         if (response.statusCode == 200) {
-          final data = json.decode(response.body);
+          final data = json.decode(utf8.decode(response.bodyBytes));
           return fromJson(data);
         } else {
           throw Exception('PATCH $endpoint failed: ${response.statusCode}');
@@ -160,7 +194,8 @@ class ApiService {
         final response =
             await http.delete(_buildUri(endpoint), headers: defaultHeaders);
 
-        _log('Response (${response.statusCode}): ${response.body}');
+        _log(
+            'Response (${response.statusCode}): ${utf8.decode(response.bodyBytes)}');
         if (response.statusCode != 200 && response.statusCode != 204) {
           throw Exception('DELETE $endpoint failed: ${response.statusCode}');
         }
