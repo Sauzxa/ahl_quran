@@ -7,6 +7,7 @@ class Lecture implements Model {
   dynamic lectureNameEn = '';
   dynamic shownOnWebsite;
   dynamic circleType = '';
+  dynamic category = '';
 
   Lecture({
     this.lectureId,
@@ -15,6 +16,7 @@ class Lecture implements Model {
     this.lectureNameEn,
     this.shownOnWebsite,
     this.circleType,
+    this.category,
   });
 
   factory Lecture.fromJson(Map<String, dynamic> json) => Lecture(
@@ -27,6 +29,7 @@ class Lecture implements Model {
             (json['shownOnWebsite'] ?? json['shown_on_website']) == 1 ||
                 (json['shownOnWebsite'] ?? json['shown_on_website']) == true,
         circleType: json['circleType'] ?? json['circle_type'],
+        category: json['category'] ?? '',
       );
 
   @override
@@ -37,6 +40,7 @@ class Lecture implements Model {
         'lecture_name_en': lectureNameEn,
         'shown_on_website': shownOnWebsite ? 1 : 0,
         'circle_type': circleType,
+        'category': category,
       };
 
   @override

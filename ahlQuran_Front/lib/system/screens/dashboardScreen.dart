@@ -7,7 +7,6 @@ import './base_layout.dart';
 
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_teachers.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/guardian_managment.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/lecture_managment.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/attendance/attendance.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_records.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/screens/report1_screen.dart';
@@ -35,7 +34,7 @@ final List<DashboardTileConfig> tiles = [
     count: '18',
     icon: Icons.list,
     bigIcon: Icons.list_alt,
-    page: () => const AddLecture(),
+    route: Routes.addLecture,
   ),
   DashboardTileConfig(
     label: 'أولياء الأمور',

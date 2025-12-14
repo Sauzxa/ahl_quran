@@ -9,6 +9,7 @@ from app.models.admin import Admin
 from app.models.session import Session
 from app.models.sessionParticipation import SessionParticipation, ParticipationStatus
 from app.models.acheivements import Achievement
+from app.models.lecture import Lecture, WeeklySchedule
 
 __all__ = [
     "User",
@@ -22,4 +23,6 @@ __all__ = [
     "SessionParticipation",
     "ParticipationStatus",
     "Achievement",
+    "Lecture",
+    "WeeklySchedule",
 ]

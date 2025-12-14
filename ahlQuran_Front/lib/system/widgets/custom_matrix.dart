@@ -105,6 +105,31 @@ class TimeCellController extends GetxController {
 
     return result;
   }
+
+  /// Load existing schedules into the matrix (for editing)
+  void loadSchedules(List<WeeklySchedule> schedules) {
+    // First, clear all selections
+    clearAll();
+
+    // Then, populate with existing data
+    for (var schedule in schedules) {
+      final day = schedule.dayOfWeek as String;
+      if (weekDays.containsKey(day)) {
+        weekDays[day]!.value = true;
+        dayTimes[day]!['from']!.value = schedule.startTime ?? '';
+        dayTimes[day]!['to']!.value = schedule.endTime ?? '';
+      }
+    }
+  }
+
+  /// Clear all selections and times
+  void clearAll() {
+    for (var day in weekDays.keys) {
+      weekDays[day]!.value = false;
+      dayTimes[day]!['from']!.value = '';
+      dayTimes[day]!['to']!.value = '';
+    }
+  }
 }
 
 class CustomMatrix extends StatelessWidget {

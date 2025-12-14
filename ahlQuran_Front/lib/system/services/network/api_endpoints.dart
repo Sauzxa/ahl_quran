@@ -96,6 +96,9 @@ class ApiEndpoints {
   static final String getLectures = '$baseUrl/lectures';
   static final String getSpecialLectures = '$baseUrl/special/lectures';
   static String getLectureById(int id) => '$baseUrl/lectures/$id';
+  static String updateLecture(int id) =>
+      '$baseUrl/lectures/special/lectures/$id';
+  static String deleteLecture(int id) => '$baseUrl/lectures/$id';
 
   // LectureStudent endpoints
   static final String getLectureStudents = '$baseUrl/lecturestudents';
@@ -133,8 +136,8 @@ class ApiEndpoints {
   static String getSupervisorById(int id) => '$baseUrl/supervisors/$id';
 
   // Teacher endpoints
-  static final String getTeachers = '$baseUrl/teachers';
-  static String getTeacherById(int id) => '$baseUrl/teachers/$id';
+  static final String getTeachers = '$baseUrl/teacher';
+  static String getTeacherById(int id) => '$baseUrl/teacher/$id';
 
   // TeamAccomplishment endpoints
   static final String getTeamAccomplishments = '$baseUrl/teamaccomplishments';
@@ -162,7 +165,7 @@ class ApiEndpoints {
   //static String getSpecialAchievements = '$baseUrl/special/achievements'; doesnt exist
 
   static String submitStudentForm = '$baseUrl/students/';
-  static String submitLectureForm = '$baseUrl/special/lectures/submit';
+  static String submitLectureForm = '$baseUrl/lectures/special/lectures/submit';
   static String getSpecialLecture(int id) => '$baseUrl/special/lectures/$id';
 
   static String submitGuardianForm = '$baseUrl/special/guardians/submit';

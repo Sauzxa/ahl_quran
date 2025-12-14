@@ -22,8 +22,28 @@ class LectureForm implements Model {
         schedules = schedules ?? [];
 
   static var fromJson = (Map<String, dynamic> json) {
+    // Handle both response formats:
+    // 1. Nested format: {lecture: {...}, teachers: [...], schedules: [...]}
+    // 2. Flat format: {lecture_id: 1, lecture_name_ar: ..., teachers: [...], schedules: [...]}
+
+    Map<String, dynamic> lectureData;
+    if (json.containsKey('lecture')) {
+      // Nested format (from create/update responses)
+      lectureData = json['lecture'] ?? {};
+    } else {
+      // Flat format (from GET responses) - extract lecture fields
+      lectureData = {
+        'lecture_id': json['lecture_id'],
+        'lecture_name_ar': json['lecture_name_ar'],
+        'lecture_name_en': json['lecture_name_en'],
+        'circle_type': json['circle_type'],
+        'category': json['category'],
+        'shown_on_website': json['shown_on_website'],
+      };
+    }
+
     return LectureForm(studentCount: json['student_count'] ?? 0)
-      ..lecture = Lecture.fromJson(json['lecture'] ?? {})
+      ..lecture = Lecture.fromJson(lectureData)
       ..teachers = (json['teachers'] as List<dynamic>? ?? [])
           .map((t) => Teacher.fromJson(t))
           .toList()
@@ -37,7 +57,6 @@ class LectureForm implements Model {
     return lecture.lectureNameAr.isNotEmpty &&
         lecture.lectureNameEn.isNotEmpty &&
         lecture.circleType.isNotEmpty &&
-        teachers.isNotEmpty &&
         schedules.isNotEmpty;
   }
 
@@ -49,9 +68,10 @@ class LectureForm implements Model {
         "lecture_name_ar": lecture.lectureNameAr,
         "lecture_name_en": lecture.lectureNameEn,
         "circle_type": lecture.circleType,
+        "category": lecture.category,
         "shown_on_website": lecture.shownOnWebsite
       },
-      "teachers": teachers.map((t) => t.toJson()).toList(),
+      "teachers": teachers.map((t) => {"teacher_id": t.teacherId}).toList(),
       "schedules": schedules.map((s) => s.toJson()).toList(),
       "student_count": studentCount,
     };
