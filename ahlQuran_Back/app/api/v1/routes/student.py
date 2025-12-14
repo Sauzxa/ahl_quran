@@ -32,16 +32,15 @@ def map_student_to_response(student: Student) -> StudentResponse:
     personal_info = PersonalInfo(
         firstNameAr=student.user.firstname,
         lastNameAr=student.user.lastname,
+        firstNameEn=student.first_name_en,
+        lastNameEn=student.last_name_en,
         sex=student.sex,
         dateOfBirth=student.date_of_birth,
         placeOfBirth=student.place_of_birth,
         homeAddress=student.home_address,
         nationality=student.nationality,
-        # Fields not in DB yet
-        firstNameEn=None,
-        lastNameEn=None,
-        fatherStatus=None,
-        motherStatus=None
+        fatherStatus=student.father_status,
+        motherStatus=student.mother_status
     )
 
     # Account Info
@@ -177,6 +176,14 @@ async def create_student(
         place_of_birth=student_data.personalInfo.place_of_birth,
         home_address=student_data.personalInfo.home_address,
         nationality=student_data.personalInfo.nationality,
+        
+        # English name fields
+        first_name_en=student_data.personalInfo.first_name_en,
+        last_name_en=student_data.personalInfo.last_name_en,
+        
+        # Parent status fields
+        father_status=student_data.personalInfo.father_status,
+        mother_status=student_data.personalInfo.mother_status,
         
         academic_level=student_data.formalEducationInfo.academic_level,
         grade=student_data.formalEducationInfo.grade,
@@ -334,6 +341,122 @@ async def update_student(
     logger.info(f"Student {student_id} updated by user {current_user.id}")
 
     return map_student_to_response(student)
+
+
+@studentRouter.put("/{student_id}/full", response_model=StudentResponse)
+async def update_student_full(
+    student_id: int,
+    student_data: StudentCreateFull,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_president_or_supervisor)
+):
+    """
+    Update complete student information with nested structure.
+    This endpoint accepts the same schema as POST for full updates.
+    """
+    
+    # Get existing student with all relationships
+    result = await db.execute(
+        select(Student)
+        .options(
+            selectinload(Student.user),
+            selectinload(Student.participations).selectinload(SessionParticipation.session)
+        )
+        .where(Student.id == student_id)
+    )
+    student = result.scalar_one_or_none()
+
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Student with ID {student_id} not found"
+        )
+
+    # Check if email is being changed and if new email is already taken by another user
+    if student_data.contactInfo.email != student.user.email:
+        email_result = await db.execute(
+            select(User).where(
+                User.email == student_data.contactInfo.email,
+                User.id != student.user.id
+            )
+        )
+        if email_result.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+
+    # Update User fields
+    student.user.firstname = student_data.personalInfo.first_name_ar
+    student.user.lastname = student_data.personalInfo.last_name_ar
+    student.user.email = student_data.contactInfo.email
+    
+    # Update password only if provided and different
+    if student_data.accountInfo.passcode:
+        student.user.hashed_password = get_password_hash(student_data.accountInfo.passcode)
+
+    # Update Student fields - Personal Info
+    student.sex = student_data.personalInfo.sex
+    student.date_of_birth = student_data.personalInfo.date_of_birth
+    student.place_of_birth = student_data.personalInfo.place_of_birth
+    student.home_address = student_data.personalInfo.home_address
+    student.nationality = student_data.personalInfo.nationality
+    
+    # Update English name fields
+    student.first_name_en = student_data.personalInfo.first_name_en
+    student.last_name_en = student_data.personalInfo.last_name_en
+    
+    # Update Parent status fields
+    student.father_status = student_data.personalInfo.father_status
+    student.mother_status = student_data.personalInfo.mother_status
+
+    # Update Contact Info
+    student.parent_phone = student_data.contactInfo.phone_number
+
+    # Update Guardian Info
+    parent_name = f"{student_data.guardian.first_name or ''} {student_data.guardian.last_name or ''}".strip()
+    student.parent_name = parent_name if parent_name else None
+    student.guardian_email = student_data.guardian.email
+    student.guardian_id = student_data.guardian.guardian_id
+
+    # Update Formal Education Info
+    student.academic_level = student_data.formalEducationInfo.academic_level
+    student.grade = student_data.formalEducationInfo.grade
+    student.school_name = student_data.formalEducationInfo.school_name
+
+    # Update Lectures (Session Participations)
+    # Remove existing participations
+    await db.execute(
+        SessionParticipation.__table__.delete().where(
+            SessionParticipation.student_id == student_id
+        )
+    )
+    
+    # Add new participations
+    if student_data.lectures:
+        for lecture in student_data.lectures:
+            participation = SessionParticipation(
+                student_id=student_id,
+                session_id=lecture.lecture_id,
+            )
+            db.add(participation)
+
+    await db.commit()
+    
+    # Reload with relationships for response
+    result = await db.execute(
+        select(Student)
+        .options(
+            selectinload(Student.user),
+            selectinload(Student.participations).selectinload(SessionParticipation.session)
+        )
+        .where(Student.id == student_id)
+    )
+    updated_student = result.scalar_one()
+
+    logger.info(f"Student {student_id} fully updated by user {current_user.id}")
+
+    return map_student_to_response(updated_student)
 
 
 @studentRouter.delete("/{student_id}", status_code=status.HTTP_204_NO_CONTENT)

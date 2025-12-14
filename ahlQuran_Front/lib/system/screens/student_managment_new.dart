@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/student_management_controller.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/generic_edit_controller.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/student.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/dialogs/student.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/three_bounce.dart';
@@ -457,11 +458,30 @@ class StudentManagementScreen extends GetView<StudentManagementController> {
   }
 
   void _showEditStudentDialog(Student student) {
-    // TODO: Pass student data to edit dialog
+    // Clean up any existing controller
+    if (Get.isRegistered<GenericEditController<Student>>()) {
+      Get.delete<GenericEditController<Student>>();
+    }
+
+    // Register the controller with the student data
+    Get.put(GenericEditController<Student>(
+      initialmodel: student,
+      isEdit: true,
+    ));
+
+    // Show the dialog
     Get.dialog(
       const StudentDialog(dialogHeader: 'تعديل بيانات الطالب'),
       barrierDismissible: false,
-    );
+    ).then((_) {
+      // Refresh the student list after dialog closes
+      controller.refresh();
+
+      // Clean up the controller
+      if (Get.isRegistered<GenericEditController<Student>>()) {
+        Get.delete<GenericEditController<Student>>();
+      }
+    });
   }
 
   void _showStudentDetails(Student student) {

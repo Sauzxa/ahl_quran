@@ -1,9 +1,7 @@
-import 'package:collection/collection.dart';
 import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../controllers/generic_edit_controller.dart';
-import '../../../controllers/submit_form.dart';
 import '../../new_models/guardian.dart';
 import '../../new_models/lecture.dart';
 import '../../services/network/api_endpoints.dart';
@@ -73,11 +71,13 @@ class _StudentDialogState<GEC extends GenericEditController<Student>>
     generate = Get.isRegistered<Generate>()
         ? Get.find<Generate>()
         : Get.put(Generate());
-    formController.controllers[7].text = generate.generatePassword();
 
     if (editController?.model.value != null) {
-      studentInfo = editController?.model.value ?? Student();
+      // In edit mode, copy the student data
+      studentInfo = editController!.model.value!;
     } else {
+      // In create mode, generate password and set account type
+      formController.controllers[7].text = generate.generatePassword();
       studentInfo.accountInfo.accountType = "طالب";
     }
   }
@@ -120,6 +120,7 @@ class _StudentDialogState<GEC extends GenericEditController<Student>>
       GuardianInfoSection(
         guardianResult: guardianResult,
         studentInfo: studentInfo,
+        editController: editController,
         onAddGuardian: () async {
           await Get.put(form.FormController(5), tag: "وصي");
           await Get.put(Generate());
@@ -169,25 +170,42 @@ class _StudentDialogState<GEC extends GenericEditController<Student>>
   @override
   void setDefaultFieldsValue() {
     final s = editController?.model.value;
-    formController.controllers[0].text = s?.personalInfo.firstNameAr ?? '';
-    formController.controllers[1].text = s?.personalInfo.lastNameAr ?? '';
-    formController.controllers[2].text = s?.personalInfo.firstNameEn ?? '';
-    formController.controllers[3].text = s?.personalInfo.lastNameEn ?? '';
-    formController.controllers[4].text = s?.personalInfo.dateOfBirth ?? '';
-    formController.controllers[5].text = s?.personalInfo.homeAddress ?? '';
-    formController.controllers[6].text = s?.accountInfo.username ?? '';
-    formController.controllers[7].text = s?.accountInfo.passcode ?? '';
-    formController.controllers[8].text = s?.medicalInfo.diseasesCauses ?? '';
-    formController.controllers[9].text = s?.medicalInfo.allergies ?? '';
-    formController.controllers[10].text = s?.contactInfo.phoneNumber ?? '';
-    formController.controllers[11].text = s?.contactInfo.email ?? '';
-    formController.controllers[12].text = s?.subscriptionInfo.exitReason ?? '';
+    if (s == null) return;
+
+    // Copy data to studentInfo first
+    studentInfo.personalInfo = s.personalInfo;
+    studentInfo.accountInfo = s.accountInfo;
+    studentInfo.contactInfo = s.contactInfo;
+    studentInfo.medicalInfo = s.medicalInfo;
+    studentInfo.guardian = s.guardian;
+    studentInfo.lectures = List.from(s.lectures);
+    studentInfo.formalEducationInfo = s.formalEducationInfo;
+    studentInfo.subscriptionInfo = s.subscriptionInfo;
+
+    // Pre-fill form controllers
+    formController.controllers[0].text = s.personalInfo.firstNameAr ?? '';
+    formController.controllers[1].text = s.personalInfo.lastNameAr ?? '';
+    formController.controllers[2].text = s.personalInfo.firstNameEn ?? '';
+    formController.controllers[3].text = s.personalInfo.lastNameEn ?? '';
+    formController.controllers[4].text = s.personalInfo.dateOfBirth ?? '';
+    formController.controllers[5].text = s.personalInfo.homeAddress ?? '';
+    formController.controllers[6].text = s.accountInfo.username ?? '';
+    formController.controllers[7].text = s.accountInfo.passcode ?? '';
+    formController.controllers[8].text = s.medicalInfo.diseasesCauses ?? '';
+    formController.controllers[9].text = s.medicalInfo.allergies ?? '';
+    formController.controllers[10].text = s.contactInfo.phoneNumber ?? '';
+    formController.controllers[11].text = s.contactInfo.email ?? '';
+    formController.controllers[12].text = s.subscriptionInfo.exitReason ?? '';
     formController.controllers[13].text =
-        s?.formalEducationInfo.schoolName ?? '';
-    formController.controllers[14].text = s?.personalInfo.placeOfBirth ?? '';
-    enrollmentDate.value = s?.subscriptionInfo.enrollmentDate;
-    exitDate.value = s?.subscriptionInfo.exitDate;
-    isExempt.value = s?.subscriptionInfo.isExemptFromPayment == 1;
+        s.formalEducationInfo.schoolName ?? '';
+    formController.controllers[14].text = s.personalInfo.placeOfBirth ?? '';
+
+    // Pre-fill date pickers
+    enrollmentDate.value = s.subscriptionInfo.enrollmentDate;
+    exitDate.value = s.subscriptionInfo.exitDate;
+
+    // Pre-fill subscription checkbox
+    isExempt.value = s.subscriptionInfo.isExemptFromPayment == 1;
   }
 
   @override
@@ -196,8 +214,7 @@ class _StudentDialogState<GEC extends GenericEditController<Student>>
     formKey.currentState!.save();
 
     if (editController?.model.value == null) {
-      // Create Mode - Construct flat JSON for backend
-      // Create Mode - Construct JSON based on active form fields
+      // Create Mode - Construct JSON for backend
       final body = {
         'personalInfo': studentInfo.personalInfo.toJson(),
         'accountInfo': studentInfo.accountInfo.toJson(),
@@ -219,14 +236,34 @@ class _StudentDialogState<GEC extends GenericEditController<Student>>
         return false;
       }
     } else {
-      // Edit Mode
-      return await submitEditDataForm<Student>(
-        formKey,
-        studentInfo,
-        ApiEndpoints.getSpecialStudent(
-            editController?.model.value?.accountInfo.accountId ?? -1),
-        Student.fromJson,
-      );
+      // Edit Mode - Use full update endpoint
+      final studentId = editController?.model.value?.personalInfo.studentId;
+
+      if (studentId == null) {
+        dev.log("Error: Student ID is null");
+        return false;
+      }
+
+      final body = {
+        'personalInfo': studentInfo.personalInfo.toJson(),
+        'accountInfo': studentInfo.accountInfo.toJson(),
+        'contactInfo': studentInfo.contactInfo.toJson(),
+        'guardian': studentInfo.guardian.toJson(),
+        'lectures': studentInfo.lectures.map((e) => e.toJson()).toList(),
+        'formalEducationInfo': studentInfo.formalEducationInfo.toJson(),
+      };
+
+      try {
+        await ApiService.put(
+          ApiEndpoints.updateStudentFull(studentId),
+          body,
+          Student.fromJson,
+        );
+        return true;
+      } catch (e) {
+        dev.log("Error updating student: $e");
+        return false;
+      }
     }
   }
 }
@@ -679,17 +716,33 @@ class ParentStatusSection extends StatelessWidget {
 class GuardianInfoSection extends StatelessWidget {
   final MultiSelectResult<Guardian>? guardianResult;
   final Student studentInfo;
+  final GenericEditController<Student>? editController;
   final VoidCallback? onAddGuardian;
 
   const GuardianInfoSection({
     super.key,
     required this.guardianResult,
     required this.studentInfo,
+    this.editController,
     this.onAddGuardian,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Create initial picked item if guardian exists from edit mode
+    List<MultiSelectItem<Guardian>>? initialPickedGuardian;
+    if (editController?.model.value?.guardian != null &&
+        editController!.model.value!.guardian.guardianId != null) {
+      final guardian = editController!.model.value!.guardian;
+      initialPickedGuardian = [
+        MultiSelectItem<Guardian>(
+          id: guardian.guardianId ?? 0,
+          obj: guardian,
+          name: "${guardian.firstName ?? ''} ${guardian.lastName ?? ''}".trim(),
+        )
+      ];
+    }
+
     return CustomContainer(
       headerIcon: Icons.family_restroom,
       headerText: "معلومات عن الوصي",
@@ -711,6 +764,7 @@ class GuardianInfoSection extends StatelessWidget {
             child: InputField(
               inputTitle: "حساب الوصي",
               child: MultiSelect<Guardian>(
+                initialPickedItems: initialPickedGuardian,
                 getPickedItems: (pickedItems) {
                   if (pickedItems.isNotEmpty) {
                     studentInfo.guardian = pickedItems[0].obj;

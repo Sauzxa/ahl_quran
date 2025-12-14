@@ -32,6 +32,14 @@ class Student(Base):
     home_address: Mapped[Optional[str]] = mapped_column(String(255))
     nationality: Mapped[Optional[str]] = mapped_column(String(50))
     
+    # English name fields
+    first_name_en: Mapped[Optional[str]] = mapped_column(String(50))
+    last_name_en: Mapped[Optional[str]] = mapped_column(String(50))
+    
+    # Parent status fields
+    father_status: Mapped[Optional[str]] = mapped_column(String(50))
+    mother_status: Mapped[Optional[str]] = mapped_column(String(50))
+    
     academic_level: Mapped[Optional[str]] = mapped_column(String(50))
     grade: Mapped[Optional[str]] = mapped_column(String(50))
     school_name: Mapped[Optional[str]] = mapped_column(String(100))

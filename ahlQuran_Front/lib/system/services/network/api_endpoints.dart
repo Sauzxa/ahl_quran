@@ -173,6 +173,7 @@ class ApiEndpoints {
       '$baseUrl/lecturestudents/lectures/$idLecture/students';
 
   static String getSpecialStudent(int id) => '$baseUrl/students/$id';
+  static String updateStudentFull(int id) => '$baseUrl/students/$id/full';
 
   static String getGuardianByUserName(String? guardianAccountUserName) =>
       '$baseUrl/special/students/$guardianAccountUserName';

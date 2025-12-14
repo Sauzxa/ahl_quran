@@ -146,6 +146,7 @@ abstract class DialogState<GEC extends GenericEditController>
             DialogSubmitButton(
               isComplete: isComplete,
               onSubmit: _handleSubmit,
+              isEditMode: editController?.model.value != null,
             )
           ],
         ),
