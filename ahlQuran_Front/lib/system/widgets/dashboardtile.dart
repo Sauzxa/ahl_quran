@@ -5,7 +5,8 @@ class DashboardTileConfig {
   final String label;
   final IconData icon;
   final IconData bigIcon;
-  final Widget Function() page;
+  final Widget Function()? page;
+  final String? route;
   final String? count;
   final bool isWide;
   final Color? backgroundColor;
@@ -14,7 +15,8 @@ class DashboardTileConfig {
     required this.label,
     required this.icon,
     required this.bigIcon,
-    required this.page,
+    this.page,
+    this.route,
     this.count,
     this.isWide = false,
     this.backgroundColor,
@@ -52,7 +54,13 @@ class _DashboardTileState extends State<DashboardTile> {
       onEnter: (_) => setState(() => _hovering = true),
       onExit: (_) => setState(() => _hovering = false),
       child: GestureDetector(
-        onTap: () => Get.to(widget.config.page()),
+        onTap: () {
+          if (widget.config.route != null) {
+            Get.toNamed(widget.config.route!);
+          } else if (widget.config.page != null) {
+            Get.to(widget.config.page!());
+          }
+        },
         child: AnimatedScale(
           scale: scale,
           duration: duration,

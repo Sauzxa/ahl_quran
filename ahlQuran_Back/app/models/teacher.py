@@ -33,5 +33,11 @@ class Teacher(Base):
         foreign_keys=[created_by_id]  # ← Use list
     )
     
+    lectures: Mapped[list["Lecture"]] = relationship(
+        "Lecture",
+        secondary="lecture_teachers",
+        back_populates="teachers"
+    )
+    
     def __repr__(self) -> str:
-        return f"Teacher(id={self.id}, subject={self.subject})"
+        return f"Teacher(id={self.id}, user_id={self.user_id})"

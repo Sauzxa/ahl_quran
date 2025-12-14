@@ -21,13 +21,15 @@ class SubscriptionInfo implements Model {
 
   factory SubscriptionInfo.fromJson(Map<String, dynamic> json) =>
       SubscriptionInfo(
-        subscriptionId: json['subscription_id'],
-        studentId: json['student_id'],
-        enrollmentDate: json['enrollment_date'],
-        exitDate: json['exit_date'],
-        exitReason: json['exit_reason'],
-        isExemptFromPayment: json['is_exempt_from_payment'],
-        exemptionPercentage: json['exemption_percentage'],
+        subscriptionId: json['subscriptionId'] ?? json['subscription_id'],
+        studentId: json['studentId'] ?? json['student_id'],
+        enrollmentDate: json['enrollmentDate'] ?? json['enrollment_date'],
+        exitDate: json['exitDate'] ?? json['exit_date'],
+        exitReason: json['exitReason'] ?? json['exit_reason'],
+        isExemptFromPayment:
+            json['isExemptFromPayment'] ?? json['is_exempt_from_payment'],
+        exemptionPercentage:
+            json['exemptionPercentage'] ?? json['exemption_percentage'],
       );
 
   @override

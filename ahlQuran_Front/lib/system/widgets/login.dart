@@ -69,8 +69,9 @@ class LogIn extends StatelessWidget {
                   ),
                 ),
                 items: [
+                  const DropdownMenuItem(value: "admin", child: Text("رئيس")),
                   const DropdownMenuItem(
-                      value: "president", child: Text("رئيس")),
+                      value: "president", child: Text("المشرف العام")),
                   const DropdownMenuItem(
                       value: "supervisor", child: Text("مشرف")),
                   const DropdownMenuItem(value: "teacher", child: Text("معلم")),

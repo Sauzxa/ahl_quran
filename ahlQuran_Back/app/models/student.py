@@ -18,12 +18,33 @@ class Student(Base):
     )
     
     # Student-specific fields
-    enrollment_date: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    enrollment_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     parent_name: Mapped[Optional[str]] = mapped_column(String(255))
     parent_phone: Mapped[Optional[str]] = mapped_column(String(20)) 
     guardian_email: Mapped[Optional[str]] = mapped_column(String(255))
     created_by_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
     Golden: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
+    
+    # New Fields
+    sex: Mapped[Optional[str]] = mapped_column(String(10))
+    date_of_birth: Mapped[Optional[str]] = mapped_column(String(20))
+    place_of_birth: Mapped[Optional[str]] = mapped_column(String(100))
+    home_address: Mapped[Optional[str]] = mapped_column(String(255))
+    nationality: Mapped[Optional[str]] = mapped_column(String(50))
+    
+    # English name fields
+    first_name_en: Mapped[Optional[str]] = mapped_column(String(50))
+    last_name_en: Mapped[Optional[str]] = mapped_column(String(50))
+    
+    # Parent status fields
+    father_status: Mapped[Optional[str]] = mapped_column(String(50))
+    mother_status: Mapped[Optional[str]] = mapped_column(String(50))
+    
+    academic_level: Mapped[Optional[str]] = mapped_column(String(50))
+    grade: Mapped[Optional[str]] = mapped_column(String(50))
+    school_name: Mapped[Optional[str]] = mapped_column(String(100))
+    
+    guardian_id: Mapped[Optional[int]] = mapped_column(Integer)
     
     # Many-to-Many relationship with Sessions through SessionParticipation
     participations: Mapped[List["SessionParticipation"]] = relationship(

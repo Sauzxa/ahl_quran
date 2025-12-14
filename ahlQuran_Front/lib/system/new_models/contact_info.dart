@@ -12,9 +12,9 @@ class ContactInfo implements Model {
   });
 
   factory ContactInfo.fromJson(Map<String, dynamic> json) => ContactInfo(
-        contactId: json['contact_id'],
+        contactId: json['contactId'] ?? json['contact_id'],
         email: json['email'],
-        phoneNumber: json['phone_number'],
+        phoneNumber: json['phoneNumber'] ?? json['phone_number'],
       );
 
   @override

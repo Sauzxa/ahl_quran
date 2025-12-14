@@ -4,6 +4,7 @@ class Routes {
   static const createAccount = '/create_account';
   static const forgetPassword = '/forget_password';
   static const onboarding = '/onboarding';
+  static const adminDashboard = '/admin/dashboard';
 
   static const addStudent = '/add_student';
   static const addGuardian = '/add_guardian';

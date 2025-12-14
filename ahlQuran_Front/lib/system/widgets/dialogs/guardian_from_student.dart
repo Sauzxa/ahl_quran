@@ -32,7 +32,8 @@ class _GuardianDialogLiteState extends State<GuardianDialogLite> {
   void initState() {
     super.initState();
     generate = Get.find<Generate>();
-    formController = Get.find<form.FormController>(tag: "guardian");
+    // Use the same tag "وصي" as defined in StudentDialog
+    formController = Get.find<form.FormController>(tag: "وصي");
     scrollController = ScrollController();
   }
 
@@ -41,28 +42,25 @@ class _GuardianDialogLiteState extends State<GuardianDialogLite> {
     scrollController.dispose();
     formController.dispose();
     generate.dispose();
-    Get.delete<form.FormController>(tag: "guardian");
+    Get.delete<form.FormController>(tag: "وصي");
     Get.delete<Generate>();
     super.dispose();
   }
 
   Future<void> _handleSubmit() async {
-    isComplete.value = false;
+    if (!guardianFormKey.currentState!.validate()) return;
+    guardianFormKey.currentState!.save();
+
+    // Generate username/passcode if needed, though username is generated on change
     guardianInfo.accountInfo.passcode = guardianInfo.accountInfo.username;
-    final success = await submitForm(
-      guardianFormKey,
-      guardianInfo,
-      ApiEndpoints.submitGuardianForm,
-      (GuardianInfoDialog.fromJson),
-    );
-    if (success) {
-      Get.back();
-    }
-    isComplete.value = true;
+
+    // Return the collected guardian info to the parent dialog
+    // The parent (StudentDialog) will handle the actual submission to the backend
+    Get.back(result: guardianInfo);
   }
 
   Widget _buildHeader() {
-    return DialogHeader(title: 'إضافة ولي أمر');
+    return const DialogHeader(title: 'إضافة حساب ولي أمر');
   }
 
   Widget _buildFormContent() {
@@ -102,7 +100,7 @@ class _GuardianDialogLiteState extends State<GuardianDialogLite> {
       children: [
         Expanded(
           child: InputField(
-            inputTitle: "الاسم الأول",
+            inputTitle: "الاسم",
             child: CustomTextField(
               controller: formController.controllers[0],
               validator: (value) =>
@@ -118,7 +116,7 @@ class _GuardianDialogLiteState extends State<GuardianDialogLite> {
         const SizedBox(width: 8),
         Expanded(
           child: InputField(
-            inputTitle: "اسم العائلة",
+            inputTitle: "الكنية",
             child: CustomTextField(
               controller: formController.controllers[1],
               validator: (value) =>
@@ -140,7 +138,7 @@ class _GuardianDialogLiteState extends State<GuardianDialogLite> {
       children: [
         Expanded(
           child: InputField(
-            inputTitle: "رقم الهاتف",
+            inputTitle: "رقم الهاتف (سيعتبر اسم المستخدم)",
             child: CustomTextField(
               controller: formController.controllers[2],
               validator: (value) => Validator.isValidPhoneNumber(value),
@@ -152,7 +150,7 @@ class _GuardianDialogLiteState extends State<GuardianDialogLite> {
         const SizedBox(width: 8),
         Expanded(
           child: InputField(
-            inputTitle: "البريد الإلكتروني",
+            inputTitle: "البريد الالكتروني",
             child: CustomTextField(
               controller: formController.controllers[3],
               validator: (value) => Validator.isValidEmail(value),
@@ -167,7 +165,7 @@ class _GuardianDialogLiteState extends State<GuardianDialogLite> {
 
   Widget _buildRelationshipField() {
     return InputField(
-      inputTitle: "العلاقة",
+      inputTitle: "صلة القرابة",
       child: DropDownWidget(
         items: relationship,
         initialValue: relationship[0],
@@ -189,7 +187,7 @@ class _GuardianDialogLiteState extends State<GuardianDialogLite> {
     return ConstrainedBox(
       constraints: BoxConstraints(
         minWidth: 300,
-        maxWidth: Get.width * 0.55,
+        maxWidth: Get.width * 0.45, // Match StudentDialog width
       ),
       child: Dialog(
         shape: RoundedRectangleBorder(

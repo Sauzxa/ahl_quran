@@ -40,6 +40,13 @@ class SessionParticipation(Base):
         index=True
     )
     
+    lecture_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey("lectures.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True
+    )
+    
     # Attendance tracking
     status: Mapped[ParticipationStatus] = mapped_column(
         SQLEnum(ParticipationStatus),
@@ -90,6 +97,12 @@ class SessionParticipation(Base):
     recorded_by: Mapped[Optional["User"]] = relationship(
         "User",
         foreign_keys=[recorded_by_id]
+    )
+    
+    lecture: Mapped[Optional["Lecture"]] = relationship(
+        "Lecture",
+        back_populates="participations",
+        foreign_keys=[lecture_id]
     )
     
     def __repr__(self) -> str:

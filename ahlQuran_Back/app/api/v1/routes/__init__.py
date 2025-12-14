@@ -6,6 +6,7 @@ from .president import presidentRouter
 from .supervisor import supervisorRouter
 from .teacher import teacherRouter
 from .student import studentRouter
+from .lectures import lectureRouter
 
 def register_routes(app):
     routes = [
@@ -15,6 +16,7 @@ def register_routes(app):
         (supervisorRouter, "/supervisor", ["Supervisor"]),
         (teacherRouter, "/teacher", ["Teacher"]),
         (studentRouter, "/students", ["Students"]),
+        (lectureRouter, "/lectures", ["Lectures"]),
     ]
 
     for router, prefix, tags in routes:

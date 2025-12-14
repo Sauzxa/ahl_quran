@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/generic_edit_controller.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/lecture_management_controller.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/teacher.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/services/network/api_endpoints.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/dialogs/dialog.dart';
@@ -53,7 +54,17 @@ class _LectureDialogState<GEC extends GenericEditController<LectureForm>>
   }
 
   // State Variables
-  late final TimeCellController timeCellController;
+  TimeCellController? _timeCellController;
+  TimeCellController get timeCellController {
+    if (_timeCellController == null) {
+      if (!Get.isRegistered<TimeCellController>()) {
+        Get.put(TimeCellController());
+      }
+      _timeCellController = Get.find<TimeCellController>();
+    }
+    return _timeCellController!;
+  }
+
   final lectureInfo = LectureForm();
   MultiSelectResult<Teacher>? teacherResult;
   String selectedLectureType = type.isNotEmpty ? type[0] : '';
@@ -64,16 +75,20 @@ class _LectureDialogState<GEC extends GenericEditController<LectureForm>>
   @override
   void initState() {
     super.initState();
+    // Initialize the TimeCellController
     if (!Get.isRegistered<TimeCellController>()) {
       Get.put(TimeCellController());
     }
-    timeCellController = Get.find<TimeCellController>();
+    _timeCellController = Get.find<TimeCellController>();
   }
 
   @override
+  @override
   void dispose() {
     super.dispose();
-    timeCellController.dispose();
+    if (_timeCellController != null) {
+      _timeCellController!.dispose();
+    }
     if (Get.isRegistered<TimeCellController>()) {
       Get.delete<TimeCellController>();
     }
@@ -127,9 +142,29 @@ class _LectureDialogState<GEC extends GenericEditController<LectureForm>>
                   child: DropDownWidget<String>(
                     items: type,
                     initialValue: selectedLectureType,
-                    onSaved: (p0) => lectureInfo.lecture.circleType = p0!,
+                    onSaved: (p0) => lectureInfo.lecture.circleType =
+                        getCircleTypeValue(p0!),
                     onChanged: (p0) {
                       setState(() => selectedLectureType = p0!);
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Category Dropdown
+          Row(
+            children: [
+              Expanded(
+                child: InputField(
+                  inputTitle: "الفئة", // Category
+                  child: DropDownWidget<String>(
+                    items: const ["male", "female", "both"],
+                    initialValue: lectureInfo.lecture.category ?? "both",
+                    onSaved: (p0) => lectureInfo.lecture.category = p0!,
+                    onChanged: (p0) {
+                      setState(() => lectureInfo.lecture.category = p0!);
                     },
                   ),
                 ),
@@ -196,20 +231,47 @@ class _LectureDialogState<GEC extends GenericEditController<LectureForm>>
   // Form Submission
   @override
   Future<bool> submit() async {
-    return editController?.model.value == null
-        ? await submitForm<LectureForm>(
-            formKey,
-            lectureInfo,
-            ApiEndpoints.submitLectureForm,
-            (LectureForm.fromJson),
-          )
-        : await submitEditDataForm<LectureForm>(
-            formKey,
-            lectureInfo,
-            ApiEndpoints.getSpecialLecture(
-                editController!.model.value!.lecture.lectureId),
-            (LectureForm.fromJson),
-          );
+    // Extract schedules from time matrix controller
+    lectureInfo.schedules = timeCellController.getSelectedDays();
+
+    // Debug: Check what data we have
+    dev.log('Lecture Info: ${lectureInfo.toJson()}');
+    dev.log('Is Complete: ${lectureInfo.isComplete}');
+    dev.log('Schedules: ${lectureInfo.schedules}');
+    dev.log('Teachers: ${lectureInfo.teachers}');
+
+    // Check if we're editing or creating
+    final isEditing = editController?.model.value != null;
+
+    if (isEditing) {
+      // Update existing lecture using the controller
+      final lectureId = editController!.model.value!.lecture.lectureId;
+      if (lectureId == null) {
+        Get.snackbar('خطأ', 'معرف الحلقة غير موجود');
+        return false;
+      }
+
+      try {
+        // Get the lecture management controller
+        final lectureController = Get.find<LectureManagementController>();
+        await lectureController.updateLecture(lectureId, lectureInfo);
+        // Don't call Get.back() here - let the parent dialog handle it
+        return true;
+      } catch (e, stackTrace) {
+        dev.log('Error updating lecture: $e');
+        dev.log('Stack trace: $stackTrace');
+        Get.snackbar('خطأ', 'فشل تحديث الحلقة: ${e.toString()}');
+        return false;
+      }
+    } else {
+      // Create new lecture using the submit form
+      return await submitForm<LectureForm>(
+        formKey,
+        lectureInfo,
+        ApiEndpoints.submitLectureForm,
+        (LectureForm.fromJson),
+      );
+    }
   }
 
   // Default Values Setup
@@ -218,9 +280,19 @@ class _LectureDialogState<GEC extends GenericEditController<LectureForm>>
     final s = editController!.model.value!;
     formController.controllers[0].text = s.lecture.lectureNameAr ?? "";
     formController.controllers[1].text = s.lecture.lectureNameEn ?? "";
-    // Ensure the value exists in type
-    if (type.contains(s.lecture.circleType)) {
-      selectedLectureType = s.lecture.circleType!;
+
+    // Copy the complete lecture data to lectureInfo
+    lectureInfo.lecture.lectureId = s.lecture.lectureId;
+    lectureInfo.lecture.lectureNameAr = s.lecture.lectureNameAr;
+    lectureInfo.lecture.lectureNameEn = s.lecture.lectureNameEn;
+    lectureInfo.lecture.circleType = s.lecture.circleType;
+    lectureInfo.lecture.category = s.lecture.category ?? "both";
+    lectureInfo.lecture.shownOnWebsite = s.lecture.shownOnWebsite;
+
+    // Convert English backend value to Arabic UI text
+    final arabicType = getCircleTypeText(s.lecture.circleType);
+    if (type.contains(arabicType)) {
+      selectedLectureType = arabicType;
     } else {
       selectedLectureType = type.isNotEmpty ? type[0] : '';
     }
@@ -232,6 +304,12 @@ class _LectureDialogState<GEC extends GenericEditController<LectureForm>>
               editController!.model.value?.teachers.contains(element.obj) ??
               false)
           .toList();
+    }
+
+    // Load existing schedules into the time matrix
+    // Ensure the controller is initialized before using it
+    if (s.schedules.isNotEmpty) {
+      timeCellController.loadSchedules(s.schedules);
     }
   }
 }

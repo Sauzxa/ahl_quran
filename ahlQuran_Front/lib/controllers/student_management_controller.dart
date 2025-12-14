@@ -4,6 +4,8 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/student.
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/lecture.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/services/api_client.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/services/network/api_endpoints.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/drawer_controller.dart'
+    as drawer;
 
 /// Controller for Student Management following GetX architecture
 class StudentManagementController extends GetxController {
@@ -26,6 +28,16 @@ class StudentManagementController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
+    // Update drawer selection to "Students" (index 4)
+    try {
+      if (Get.isRegistered<drawer.DrawerController>()) {
+        Get.find<drawer.DrawerController>().changeSelectedIndex(4);
+      }
+    } catch (e) {
+      dev.log('DrawerController not found or error updating index: $e');
+    }
+
     loadInitialData();
 
     // Listen to search query changes
@@ -184,15 +196,15 @@ class StudentManagementController extends GetxController {
     }
   }
 
-  /// Delete student by account ID
+  /// Delete student by student ID
   Future<bool> deleteStudent(Student student) async {
     isLoading.value = true;
     errorMessage.value = '';
 
     try {
-      // Delete using account ID endpoint
+      // Delete using student ID endpoint
       await ApiService.delete(
-        ApiEndpoints.getAccountInfoById(student.accountInfo.accountId),
+        ApiEndpoints.getStudentById(student.personalInfo.studentId as int),
       );
 
       // Remove from lists
@@ -226,7 +238,7 @@ class StudentManagementController extends GetxController {
       for (var student in selectedStudents.toList()) {
         try {
           await ApiService.delete(
-            ApiEndpoints.getAccountInfoById(student.accountInfo.accountId),
+            ApiEndpoints.getStudentById(student.personalInfo.studentId as int),
           );
         } catch (e) {
           allSuccess = false;
