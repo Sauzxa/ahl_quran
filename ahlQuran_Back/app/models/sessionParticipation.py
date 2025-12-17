@@ -33,10 +33,10 @@ class SessionParticipation(Base):
         index=True
     )
     
-    session_id: Mapped[int] = mapped_column(
+    session_id: Mapped[Optional[int]] = mapped_column(
         Integer,
         ForeignKey("sessions.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
         index=True
     )
     
@@ -71,8 +71,8 @@ class SessionParticipation(Base):
     participation_level: Mapped[Optional[int]] = mapped_column(Integer)  # 1-5 scale
     
     # Timestamps
-    marked_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
-    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, onupdate=datetime.now(timezone.utc))
+    marked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=lambda: datetime.now(timezone.utc))
     
     # Who recorded this participation
     recorded_by_id: Mapped[Optional[int]] = mapped_column(
@@ -88,7 +88,7 @@ class SessionParticipation(Base):
         foreign_keys=[student_id]
     )
     
-    session: Mapped["Session"] = relationship(
+    session: Mapped[Optional["Session"]] = relationship(
         "Session",
         back_populates="participations",
         foreign_keys=[session_id]

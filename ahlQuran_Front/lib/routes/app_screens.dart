@@ -5,7 +5,9 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/copy.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/management_binding.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/acheivement.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/student_management_binding.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/guardian_management_binding.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/lecture_management_binding.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/teacher_management_binding.dart';
 //import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/starter.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/attendance_binding.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/charts/stat1_binding.dart';
@@ -13,7 +15,6 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/charts/stat2_bind
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/charts/stat3_binding.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/forms/exam_records_form.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/forms/exam_teachers_from.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/forms/guardian_form.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/appreciation.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/exam.dart';
 //import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/exam_teacher_binding.dart'; // Assuming this is correct
@@ -26,8 +27,9 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_types.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/web/pages/copy.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/student_managment_new.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/guardian_managment.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/guardian_management_new.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/lecture_management_new.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/teacher_management_new.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/achievement_managment.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/login.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/admin_dashboard.dart';
@@ -51,6 +53,8 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/stats/stat3.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/forget_password.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/create_account.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/dashboardScreen.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/track_and_memorize_screen.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/track_memorize_students_screen.dart';
 // App routes
 import 'package:the_doctarine_of_the_ppl_of_the_quran/routes/app_routes.dart';
 
@@ -75,9 +79,19 @@ class AppScreens {
     ),
     GetPage(
       name: Routes.addGuardian,
-      page: () => AddGuardian(),
-      binding: ManagementBinding<GuardianInfoDialog>(
-          fromJson: GuardianInfoDialog.fromJson),
+      page: () => const GuardianManagementScreen(),
+      binding: GuardianManagementBinding(),
+    ),
+    // Alias for AddGuardian (case-insensitive)
+    GetPage(
+      name: '/AddGuardian',
+      page: () => const GuardianManagementScreen(),
+      binding: GuardianManagementBinding(),
+    ),
+    GetPage(
+      name: Routes.addTeacher,
+      page: () => const TeacherManagementScreen(),
+      binding: TeacherManagementBinding(),
     ),
     GetPage(
       name: Routes.addLecture,
@@ -89,6 +103,16 @@ class AppScreens {
       name: Routes.addAchievement,
       page: () => AddAcheivement(),
       binding: AcheivementBinding(),
+    ),
+    GetPage(
+      name: Routes.trackAndMemorize,
+      page: () => const TrackAndMemorizeScreen(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: Routes.trackAndMemorizeStudents,
+      page: () => const TrackMemorizeStudentsScreen(),
+      middlewares: [AuthMiddleware()],
     ),
     GetPage(
       name: Routes.test,

@@ -1,10 +1,12 @@
 // Imports
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/generic_edit_controller.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/profile_controller.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/dialogs/dialog.dart';
 import '../drop_down.dart';
-import '../../../controllers/submit_form.dart';
 import '../../new_models/forms/guardian_form.dart';
 import '../../utils/const/guardian.dart';
 import '../../../controllers/generate.dart';
@@ -30,6 +32,9 @@ class _GuardianDialogState<
     extends DialogState<GEC> {
   late Generate generate;
   var guardianInfo = GuardianInfoDialog();
+  final RxList<Map<String, dynamic>> students = <Map<String, dynamic>>[].obs;
+  final RxBool isLoadingStudents = true.obs;
+  int? selectedStudentId;
 
   @override
   void initState() {
@@ -41,8 +46,80 @@ class _GuardianDialogState<
 
     if (editController?.model.value != null) {
       guardianInfo = editController?.model.value ?? GuardianInfoDialog();
+      selectedStudentId = guardianInfo.studentId;
     } else {
       guardianInfo.accountInfo.accountType = "guardian";
+    }
+
+    _fetchStudents();
+  }
+
+  Future<void> _fetchStudents() async {
+    try {
+      isLoadingStudents.value = true;
+      final profileController = Get.find<ProfileController>();
+      final authToken = profileController.token.value;
+
+      if (authToken.isEmpty) {
+        isLoadingStudents.value = false;
+        return;
+      }
+
+      final response = await http.get(
+        Uri.parse(ApiEndpoints.getStudents),
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Authorization": "Bearer $authToken",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        final List<dynamic> studentsData = data['students'] ?? [];
+
+        debugPrint('Fetched ${studentsData.length} students');
+        if (studentsData.isNotEmpty) {
+          debugPrint('Sample student data: ${studentsData.first}');
+        }
+
+        students.value = studentsData.map((s) {
+          // Backend returns nested personalInfo with firstNameAr/lastNameAr
+          // Also has flat firstname/lastname fields
+          String firstName = '';
+          String lastName = '';
+
+          // Try nested structure first (personalInfo.firstNameAr)
+          if (s['personalInfo'] != null) {
+            firstName = s['personalInfo']['firstNameAr'] ?? '';
+            lastName = s['personalInfo']['lastNameAr'] ?? '';
+          }
+
+          // Fallback to flat fields
+          if (firstName.isEmpty) {
+            firstName = s['firstname'] ?? '';
+          }
+          if (lastName.isEmpty) {
+            lastName = s['lastname'] ?? '';
+          }
+
+          String fullName = '$firstName $lastName'.trim();
+          if (fullName.isEmpty) {
+            fullName = 'طالب ${s['id']}'; // Fallback to "Student [ID]"
+          }
+
+          return {
+            'id': s['id'],
+            'name': fullName,
+          };
+        }).toList();
+
+        debugPrint('Parsed ${students.length} students with names');
+      }
+
+      isLoadingStudents.value = false;
+    } catch (e) {
+      debugPrint('Error fetching students: $e');
+      isLoadingStudents.value = false;
     }
   }
 
@@ -57,6 +134,8 @@ class _GuardianDialogState<
   List<Widget> formChild() {
     return [
       _buildGuardianSection(),
+      const SizedBox(height: 10),
+      _buildStudentSection(),
       const SizedBox(height: 10),
       _buildAccountSection(),
       const SizedBox(height: 10),
@@ -79,6 +158,68 @@ class _GuardianDialogState<
           _buildAddressAndJobRow(),
         ],
       ),
+    );
+  }
+
+  Widget _buildStudentSection() {
+    return CustomContainer(
+      headerText: "الطالب",
+      headerIcon: Icons.school,
+      child: Obx(() {
+        if (isLoadingStudents.value) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (students.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'لا يوجد طلاب متاحين',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+          );
+        }
+
+        return InputField(
+          inputTitle: "اختر الطالب (اختياري)",
+          child: DropdownButtonFormField<int>(
+            value: selectedStudentId,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+            hint: const Text('اختر طالب'),
+            items: [
+              const DropdownMenuItem<int>(
+                value: null,
+                child: Text('لا يوجد'),
+              ),
+              ...students.map((student) {
+                return DropdownMenuItem<int>(
+                  value: student['id'],
+                  child: Text(student['name']),
+                );
+              }).toList(),
+            ],
+            onChanged: (value) {
+              selectedStudentId = value;
+              guardianInfo.studentId = value;
+            },
+            onSaved: (value) {
+              guardianInfo.studentId = value;
+            },
+          ),
+        );
+      }),
     );
   }
 
@@ -275,19 +416,94 @@ class _GuardianDialogState<
 
   @override
   Future<bool> submit() async {
-    return editController?.model.value == null
-        ? await submitForm(
-            formKey,
-            guardianInfo,
-            ApiEndpoints.submitGuardianForm,
-            (GuardianInfoDialog.fromJson),
-          )
-        : await submitEditDataForm(
-            formKey,
-            guardianInfo,
-            ApiEndpoints.getSpecialGuardiansById(
-                guardianInfo.accountInfo.accountId ?? 0),
-            (GuardianInfoDialog.fromJson),
+    if (!formKey.currentState!.validate()) return false;
+    formKey.currentState!.save();
+
+    // Get auth token
+    final profileController = Get.find<ProfileController>();
+    final authToken = profileController.token.value;
+
+    if (authToken.isEmpty) {
+      Get.snackbar(
+        'خطأ',
+        'يجب تسجيل الدخول أولاً',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return false;
+    }
+
+    // Format data to match backend schema
+    final body = {
+      'guardian_info': {
+        'first_name': guardianInfo.guardian.firstName,
+        'last_name': guardianInfo.guardian.lastName,
+        'relationship': guardianInfo.guardian.relationship,
+        'date_of_birth': guardianInfo.guardian.dateOfBirth,
+        'phone_number': guardianInfo.contactInfo.phoneNumber,
+        'email': guardianInfo.contactInfo.email,
+        'job': guardianInfo.guardian.job,
+        'address': guardianInfo.guardian.homeAddress,
+      },
+      'account_info': {
+        'username': guardianInfo.accountInfo.username,
+        'password': guardianInfo.accountInfo.passcode,
+      },
+      if (guardianInfo.studentId != null) 'student_id': guardianInfo.studentId,
+    };
+
+    try {
+      if (editController?.model.value == null) {
+        // Create mode
+        final response = await http.post(
+          Uri.parse(ApiEndpoints.submitGuardianForm),
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $authToken",
+          },
+          body: jsonEncode(body),
+        );
+
+        if (response.statusCode == 201 || response.statusCode == 200) {
+          return true;
+        } else {
+          debugPrint('Error creating guardian: ${response.body}');
+          return false;
+        }
+      } else {
+        // Edit mode - use guardian ID, not account ID
+        final guardianId = guardianInfo.guardian.guardianId;
+        if (guardianId == null) {
+          Get.snackbar(
+            'خطأ',
+            'معرف الوصي غير موجود',
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
           );
+          return false;
+        }
+
+        final response = await http.put(
+          Uri.parse(ApiEndpoints.getGuardianById(guardianId)),
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $authToken",
+          },
+          body: jsonEncode(body),
+        );
+
+        if (response.statusCode == 200) {
+          return true;
+        } else {
+          debugPrint('Error updating guardian: ${response.body}');
+          return false;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error submitting guardian: $e');
+      return false;
+    }
   }
 }

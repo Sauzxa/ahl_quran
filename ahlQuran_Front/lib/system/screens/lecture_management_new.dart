@@ -7,6 +7,7 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/forms/le
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/dialogs/lecture.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/three_bounce.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/error_illustration.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/utils/snackbar_helper.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/drawer_controller.dart'
     as drawer;
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/utils/const/lecture.dart'
@@ -31,33 +32,30 @@ class LectureManagementScreen extends GetView<LectureManagementController> {
 
     final theme = Theme.of(context);
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: BaseLayout(
-        title: "إدارة شؤون الحلقات",
-        child: Column(
-          children: [
-            // Golden header bar
-            _buildHeaderBar(theme),
+    return BaseLayout(
+      title: "إدارة شؤون الحلقات",
+      child: Column(
+        children: [
+          // Golden header bar
+          _buildHeaderBar(theme),
 
-            const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-            // Search and filters
-            _buildSearchAndFilters(theme),
+          // Search and filters
+          _buildSearchAndFilters(theme),
 
-            const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-            // Action buttons
-            _buildActionButtons(theme),
+          // Action buttons
+          _buildActionButtons(theme),
 
-            const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-            // Lectures table
-            Expanded(
-              child: _buildLecturesTable(theme),
-            ),
-          ],
-        ),
+          // Lectures table
+          Expanded(
+            child: _buildLecturesTable(theme),
+          ),
+        ],
       ),
     );
   }
@@ -437,12 +435,10 @@ class LectureManagementScreen extends GetView<LectureManagementController> {
     );
   }
 
-  /// Show add lecture dialog
+  /// Show dialog for adding a new lecture
   void _showAddLectureDialog() {
     // Clean up any existing controller
-    if (Get.isRegistered<GenericEditController<LectureForm>>()) {
-      Get.delete<GenericEditController<LectureForm>>();
-    }
+    _cleanupEditController();
 
     // Register the controller with null data for new lecture
     Get.put(GenericEditController<LectureForm>(
@@ -453,43 +449,62 @@ class LectureManagementScreen extends GetView<LectureManagementController> {
     Get.dialog(
       const LectureDialog(),
       barrierDismissible: false,
-    ).then((_) {
-      // Refresh lectures after dialog closes
-      controller.fetchAllLectures();
+    ).then((result) {
+      // Dialog handles its own refresh, just cleanup
+      _cleanupEditController();
 
-      // Clean up the controller
-      if (Get.isRegistered<GenericEditController<LectureForm>>()) {
-        Get.delete<GenericEditController<LectureForm>>();
+      // Show success message AFTER dialog closes
+      if (result == true) {
+        showSuccessSnackbar('تم إضافة الحلقة بنجاح');
       }
     });
   }
 
-  /// Show edit lecture dialog
+  /// Show dialog for editing an existing lecture
   void _showEditLectureDialog(LectureForm lecture) {
     // Clean up any existing controller
-    if (Get.isRegistered<GenericEditController<LectureForm>>()) {
-      Get.delete<GenericEditController<LectureForm>>();
-    }
+    _cleanupEditController();
 
-    // Register the controller with the lecture data
+    // Create a deep copy of the lecture to avoid reference issues
+    final lectureCopy = LectureForm(
+      lecture: lecture.lecture,
+      teachers: List.from(lecture.teachers),
+      schedules: List.from(lecture.schedules),
+      studentCount: lecture.studentCount,
+    );
+
+    // Register the controller with the copied lecture data
     Get.put(GenericEditController<LectureForm>(
-      initialmodel: lecture,
+      initialmodel: lectureCopy,
       isEdit: true,
     ));
 
     Get.dialog(
       const LectureDialog(dialogHeader: 'تعديل حلقة'),
       barrierDismissible: false,
-    ).then((_) {
-      // Refresh lectures after dialog closes
-      controller.fetchAllLectures();
-      controller.deselectAllLectures();
+    ).then((result) {
+      // Dialog handles selection clearing and refresh internally
+      _cleanupEditController();
 
-      // Clean up the controller
-      if (Get.isRegistered<GenericEditController<LectureForm>>()) {
-        Get.delete<GenericEditController<LectureForm>>();
+      // Show success/error message AFTER dialog closes
+      if (result == true) {
+        // Success
+        showSuccessSnackbar('تم تحديث الحلقة بنجاح');
+      } else if (result == false) {
+        // Failure
+        final errorMsg = controller.errorMessage.value.isNotEmpty
+            ? controller.errorMessage.value
+            : 'فشل تحديث الحلقة';
+        showErrorSnackbar(errorMsg);
       }
     });
+  }
+
+  /// Clean up the edit controller
+  void _cleanupEditController() {
+    if (Get.isRegistered<GenericEditController<LectureForm>>()) {
+      Get.delete<GenericEditController<LectureForm>>();
+    }
   }
 
   /// Confirm delete dialog

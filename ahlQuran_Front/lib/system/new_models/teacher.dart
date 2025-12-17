@@ -20,12 +20,12 @@ class Teacher implements Model {
   });
 
   factory Teacher.fromJson(Map<String, dynamic> json) => Teacher(
-        teacherId: json['teacher_id'],
+        teacherId: json['teacher_id'] ?? json['id'],
         workHours: json['work_hours'],
         teacherContactId: json['teacher_contact_id'],
-        teacherAccountId: json['teacher_account_id'],
-        firstName: json['first_name'],
-        lastName: json['last_name'],
+        teacherAccountId: json['teacher_account_id'] ?? json['user_id'],
+        firstName: json['first_name'] ?? json['firstname'],
+        lastName: json['last_name'] ?? json['lastname'],
         profileImage: json['profile_image'],
       );
 

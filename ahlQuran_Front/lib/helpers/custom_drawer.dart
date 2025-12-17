@@ -55,7 +55,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
       'type': 'item',
       'icon': Icons.person_outline,
       'title': 'المعلمين',
-      'route': Routes.examTeachers,
+      'route': Routes.addTeacher,
     },
     {
       'type': 'item',
@@ -68,6 +68,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
       'icon': Icons.menu_book,
       'title': 'الحلقات',
       'route': Routes.addLecture,
+    },
+    {
+      'type': 'item',
+      'icon': Icons.check_box,
+      'title': 'الحفظ والمراجعة',
+      'route': Routes.trackAndMemorize,
     },
   ];
 

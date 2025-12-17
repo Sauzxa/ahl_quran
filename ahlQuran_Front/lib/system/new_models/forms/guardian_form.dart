@@ -10,6 +10,7 @@ class GuardianInfoDialog implements Model {
   AccountInfo accountInfo = AccountInfo();
   ContactInfo contactInfo = ContactInfo();
   List<PersonalInfo> children = [];
+  int? studentId; // Student under guardian's care
 
   GuardianInfoDialog();
   @override
@@ -28,6 +29,7 @@ class GuardianInfoDialog implements Model {
       'contact_info': contactInfo.toJson(),
       'account_info': accountInfo.toJson(),
       'children': children.map((child) => child.toJson()).toList(),
+      'student_id': studentId,
     };
   }
 
@@ -41,5 +43,6 @@ class GuardianInfoDialog implements Model {
     } else {
       children = [];
     }
+    studentId = map['student_id'];
   }
 }

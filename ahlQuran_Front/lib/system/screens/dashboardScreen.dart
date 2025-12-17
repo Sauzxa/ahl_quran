@@ -9,6 +9,7 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/guardian_managment.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/attendance/attendance.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_records.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/track_and_memorize_screen.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/screens/report1_screen.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/stats/stat1.dart';
 
@@ -41,7 +42,7 @@ final List<DashboardTileConfig> tiles = [
     count: '13',
     icon: Icons.person,
     bigIcon: Icons.person,
-    page: () => const AddGuardian(),
+    route: Routes.addGuardian,
   ),
   DashboardTileConfig(
     label: 'حضور الطلاب',
@@ -65,7 +66,7 @@ final List<DashboardTileConfig> tiles = [
     label: 'الحفظ والمراجعة',
     icon: Icons.check_box,
     bigIcon: Icons.check_box_outlined,
-    page: () => const ExamRecords(),
+    page: () => const TrackAndMemorizeScreen(),
   ),
   DashboardTileConfig(
     label: 'التقارير',

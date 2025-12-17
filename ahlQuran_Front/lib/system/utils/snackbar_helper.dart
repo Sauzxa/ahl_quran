@@ -1,82 +1,128 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter/scheduler.dart';
 
-/// Types of snackbars you can show
-enum SnackbarType { success, error, info }
+/// Show a success snackbar using native Flutter SnackBar
+void showSuccessSnackbar(String message, {BuildContext? context}) {
+  // Schedule the snackbar to show after the current frame
+  SchedulerBinding.instance.addPostFrameCallback((_) {
+    final scaffoldContext = context ?? _getContext();
+    if (scaffoldContext == null) {
+      debugPrint('❌ Success snackbar failed: No context available');
+      return;
+    }
 
-/// Displays a customizable snackbar using GetX
-void showCustomSnackbar({
-  required String title,
-  required String message,
-  SnackbarType type = SnackbarType.info,
-  SnackPosition position = SnackPosition.BOTTOM,
-  Duration duration = const Duration(seconds: 3),
-}) {
-  final theme = Get.theme;
-  final colorScheme = theme.colorScheme;
+    try {
+      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green.shade600,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      debugPrint('✅ Success snackbar shown: $message');
+    } catch (e) {
+      debugPrint('❌ Success snackbar error: $e');
+    }
+  });
+}
 
-  // Determine icon and colors based on snackbar type
-  late IconData icon;
-  late Color backgroundColor;
-  late Color textColor;
+/// Show an error snackbar using native Flutter SnackBar
+void showErrorSnackbar(String message, {BuildContext? context}) {
+  // Schedule the snackbar to show after the current frame
+  SchedulerBinding.instance.addPostFrameCallback((_) {
+    final scaffoldContext = context ?? _getContext();
+    if (scaffoldContext == null) {
+      debugPrint('❌ Error snackbar failed: No context available');
+      return;
+    }
 
-  switch (type) {
-    case SnackbarType.success:
-      icon = Icons.check_circle;
-      backgroundColor = colorScheme.primary;
-      textColor = colorScheme.onPrimary;
-      break;
-    case SnackbarType.error:
-      icon = Icons.error;
-      backgroundColor = colorScheme.error;
-      textColor = colorScheme.onError;
-      break;
-    case SnackbarType.info:
-      icon = Icons.info;
-      backgroundColor = colorScheme.secondary;
-      textColor = colorScheme.onSecondary;
-      break;
+    try {
+      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      debugPrint('✅ Error snackbar shown: $message');
+    } catch (e) {
+      debugPrint('❌ Error snackbar error: $e');
+    }
+  });
+}
+
+/// Show an info snackbar using native Flutter SnackBar
+void showInfoSnackbar(String message, {BuildContext? context}) {
+  // Schedule the snackbar to show after the current frame
+  SchedulerBinding.instance.addPostFrameCallback((_) {
+    final scaffoldContext = context ?? _getContext();
+    if (scaffoldContext == null) {
+      debugPrint('❌ Info snackbar failed: No context available');
+      return;
+    }
+
+    try {
+      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.info, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.blue.shade600,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      debugPrint('✅ Info snackbar shown: $message');
+    } catch (e) {
+      debugPrint('❌ Info snackbar error: $e');
+    }
+  });
+}
+
+/// Helper to get current context from navigator
+BuildContext? _getContext() {
+  try {
+    return WidgetsBinding.instance.focusManager.primaryFocus?.context;
+  } catch (e) {
+    return null;
   }
-
-  // Show the snackbar
-  Get.snackbar(
-    title,
-    message,
-    snackPosition: position,
-    backgroundColor: backgroundColor,
-    colorText: textColor,
-    margin: const EdgeInsets.all(12),
-    borderRadius: 10,
-    icon: Icon(icon, color: textColor),
-    snackStyle: SnackStyle.FLOATING,
-    duration: duration,
-    isDismissible: true,
-  );
-}
-
-/// Show a success snackbar (default title: "نجاح")
-void showSuccessSnackbar(String message, {String title = "نجاح"}) {
-  showCustomSnackbar(
-    title: title,
-    message: message,
-    type: SnackbarType.success,
-  );
-}
-
-/// Show an error snackbar (default title: "خطأ")
-void showErrorSnackbar(String message, {String title = "خطأ"}) {
-  showCustomSnackbar(
-    title: title,
-    message: message,
-    type: SnackbarType.error,
-  );
-}
-
-/// Show an info snackbar (default title: "معلومات")
-void showInfoSnackbar(String message, {String title = "معلومات"}) {
-  showCustomSnackbar(
-    title: title,
-    message: message,
-    type: SnackbarType.info,
-  );
 }

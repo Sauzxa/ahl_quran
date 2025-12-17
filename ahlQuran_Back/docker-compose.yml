@@ -5,9 +5,10 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-ahl_quran_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ahl_quran_password}
       POSTGRES_DB: ${POSTGRES_DB:-ahl_quran_db}
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
-      LANG: C.UTF-8
-      LC_ALL: C.UTF-8
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -26,7 +27,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ahl_quran_user}:${POSTGRES_PASSWORD:-ahl_quran_password}@db:5432/${POSTGRES_DB:-ahl_quran_db}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ahl_quran_user}:${POSTGRES_PASSWORD:-ahl_quran_password}@db:5432/${POSTGRES_DB:-ahl_quran_db}?client_encoding=utf8
     depends_on:
       db:
         condition: service_healthy

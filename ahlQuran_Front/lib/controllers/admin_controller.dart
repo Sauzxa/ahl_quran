@@ -62,7 +62,7 @@ class AdminController extends GetxController {
       print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
         final List presidents = data['pending_presidents'] ?? [];
 
         pendingPresidents.value =
@@ -122,7 +122,7 @@ class AdminController extends GetxController {
       print('Approve response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
 
         Get.snackbar(
           'نجح',
@@ -135,7 +135,7 @@ class AdminController extends GetxController {
         // Remove the approved president from the list
         pendingPresidents.removeWhere((p) => p.id == userId);
       } else {
-        final errorData = jsonDecode(response.body);
+        final errorData = jsonDecode(utf8.decode(response.bodyBytes));
         Get.snackbar(
           'خطأ',
           errorData['detail'] ?? 'فشل قبول الطلب',

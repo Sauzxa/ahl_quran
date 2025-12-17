@@ -7,6 +7,7 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/student.
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/dialogs/student.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/three_bounce.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/error_illustration.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/utils/snackbar_helper.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/drawer_controller.dart'
     as drawer;
 import 'base_layout.dart';
@@ -601,21 +602,9 @@ class StudentManagementScreen extends GetView<StudentManagementController> {
               Get.back();
               final success = await controller.deleteSelectedStudents();
               if (success) {
-                Get.snackbar(
-                  'نجح',
-                  'تم حذف الطلاب بنجاح',
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: Colors.green,
-                  colorText: Colors.white,
-                );
+                showSuccessSnackbar('تم حذف الطلاب بنجاح');
               } else {
-                Get.snackbar(
-                  'خطأ',
-                  controller.errorMessage.value,
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: Colors.red,
-                  colorText: Colors.white,
-                );
+                showErrorSnackbar(controller.errorMessage.value);
               }
             },
             style: ElevatedButton.styleFrom(

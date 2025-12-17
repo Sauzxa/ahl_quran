@@ -5,6 +5,7 @@ from app.models.president import President
 from app.models.supervisor import Supervisor
 from app.models.teacher import Teacher
 from app.models.student import Student
+from app.models.guardian import Guardian
 from app.models.admin import Admin
 from app.models.session import Session
 from app.models.sessionParticipation import SessionParticipation, ParticipationStatus
@@ -18,6 +19,7 @@ __all__ = [
     "Supervisor",
     "Teacher",
     "Student",
+    "Guardian",
     "Admin",
     "Session",
     "SessionParticipation",
