@@ -26,6 +26,12 @@ class _TrackAndMemorizeScreenState extends State<TrackAndMemorizeScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Set today's date as default
+    final today = DateTime.now();
+    dateController.text =
+        "${today.day.toString().padLeft(2, '0')}-${today.month.toString().padLeft(2, '0')}-${today.year}";
+
     _loadLectures();
 
     // Set sidebar selection
@@ -306,13 +312,9 @@ class _TrackAndMemorizeScreenState extends State<TrackAndMemorizeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    dateController.text.isEmpty
-                        ? '17-05-2022'
-                        : dateController.text,
-                    style: TextStyle(
-                      color: dateController.text.isEmpty
-                          ? Colors.grey.shade600
-                          : Colors.black,
+                    dateController.text,
+                    style: const TextStyle(
+                      color: Colors.black,
                     ),
                   ),
                   const Icon(Icons.calendar_today, size: 20),
