@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'dart:developer' as dev;
 import '../new_models/lecture.dart';
 import '../new_models/student.dart';
+import '../new_models/achievement.dart';
 import '../services/network/api_endpoints.dart';
 import '../services/api_client.dart';
 import '../../controllers/drawer_controller.dart' as drawer;
@@ -22,6 +23,8 @@ class _TrackMemorizeStudentsScreenState
   Lecture? lecture;
   String? date;
   List<Student> students = [];
+  Map<int, Achievement?> latestAchievements =
+      {}; // studentId -> latest achievement
   bool isLoading = true;
 
   @override
@@ -84,6 +87,12 @@ class _TrackMemorizeStudentsScreenState
 
       setState(() {
         students = response;
+      });
+
+      // Load latest achievement for each student
+      await _loadLatestAchievements();
+
+      setState(() {
         isLoading = false;
       });
     } catch (e) {
@@ -95,12 +104,101 @@ class _TrackMemorizeStudentsScreenState
     }
   }
 
+  Future<void> _loadLatestAchievements() async {
+    for (var student in students) {
+      if (student.id != null) {
+        try {
+          final achievements = await ApiService.fetchList(
+            '${ApiEndpoints.getStudents}${student.id}/achievements',
+            Achievement.fromJson,
+          );
+
+          if (achievements.isNotEmpty) {
+            // Get the latest achievement (first one, as they're ordered by created_at desc)
+            latestAchievements[student.id!] = achievements.first;
+          } else {
+            latestAchievements[student.id!] = null;
+          }
+        } catch (e) {
+          dev.log('Error loading achievements for student ${student.id}: $e');
+          latestAchievements[student.id!] = null;
+        }
+      }
+    }
+  }
+
   void _showAchievementDialog(Student student) {
     showDialog(
       context: context,
       builder: (context) => AchievementDialog(
         student: student,
         date: date ?? '',
+      ),
+    ).then((_) {
+      // Reload achievements after dialog closes
+      _loadLatestAchievements().then((_) => setState(() {}));
+    });
+  }
+
+  Widget _buildAchievementButton(Student student) {
+    final achievement = latestAchievements[student.id];
+
+    if (achievement == null) {
+      return TextButton(
+        onPressed: () => _showAchievementDialog(student),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        ),
+        child: const Text('--'),
+      );
+    }
+
+    return InkWell(
+      onTap: () => _showAchievementDialog(student),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF4DB6AC).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: const Color(0xFF4DB6AC),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${achievement.getFromSurahName()} (${achievement.fromVerse})',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF4DB6AC),
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const Text(
+              '←',
+              style: TextStyle(
+                fontSize: 10,
+                color: Color(0xFF4DB6AC),
+              ),
+            ),
+            Text(
+              '${achievement.getToSurahName()} (${achievement.toVerse})',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF4DB6AC),
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -424,18 +522,7 @@ class _TrackMemorizeStudentsScreenState
                       Expanded(
                         flex: 2,
                         child: Center(
-                          child: TextButton(
-                            onPressed: () {
-                              _showAchievementDialog(student);
-                            },
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                            ),
-                            child: const Text('--'),
-                          ),
+                          child: _buildAchievementButton(student),
                         ),
                       ),
                       // Consistency button

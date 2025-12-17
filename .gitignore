@@ -1,2 +1,7 @@
 #readme
 TEST_CREDENTIALS.md
+
+# Database backups (contain sensitive data)
+*.sql
+database_backup.sql
+ahlQuran_Back/database_backup.sql
