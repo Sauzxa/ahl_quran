@@ -7,6 +7,7 @@ from app.db.session import get_db
 from app.models.user import User, UserRoleEnum
 from app.models.student import Student
 from app.models.acheivements import Achievement
+from app.models.attendance import Attendance
 from app.models.session import Session
 from app.models.sessionParticipation import SessionParticipation
 from app.schemas.student import (
@@ -15,6 +16,7 @@ from app.schemas.student import (
     LectureInfo, FormalEducationInfo, MedicalInfo, SubscriptionInfo
 )
 from app.schemas.achievement import AchievementCreate, AchievementUpdate, AchievementResponse, AchievementList
+from app.schemas.attendance import AttendanceCreate, AttendanceUpdate, AttendanceResponse, AttendanceList
 from app.schemas.student_full import StudentCreateFull
 from app.core.dependencies import get_current_user, require_president_or_supervisor
 from app.core.security import get_password_hash
@@ -660,3 +662,183 @@ async def delete_achievement(
 
     return None
 
+
+
+# ==================== ATTENDANCE OPERATIONS ====================
+
+@studentRouter.post("/{student_id}/attendance", response_model=AttendanceResponse, status_code=status.HTTP_201_CREATED)
+async def create_attendance(
+    student_id: int,
+    attendance_data: AttendanceCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_president_or_supervisor)
+):
+    """Create or update attendance record for a student on a specific date."""
+
+    # Verify student exists
+    result = await db.execute(
+        select(Student).where(Student.id == student_id)
+    )
+    student = result.scalar_one_or_none()
+
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Student with ID {student_id} not found"
+        )
+
+    # Validate attendance data belongs to the correct student
+    if attendance_data.student_id != student_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Student ID in URL must match student_id in request body"
+        )
+
+    # Check if attendance already exists for this student and date
+    existing_result = await db.execute(
+        select(Attendance).where(
+            Attendance.student_id == student_id,
+            Attendance.date == attendance_data.date
+        )
+    )
+    existing_attendance = existing_result.scalar_one_or_none()
+
+    if existing_attendance:
+        # Update existing attendance
+        existing_attendance.status = attendance_data.status
+        existing_attendance.notes = attendance_data.notes
+        await db.commit()
+        await db.refresh(existing_attendance)
+        logger.info(f"Attendance updated for student {student_id} on {attendance_data.date} by user {current_user.id}")
+        return existing_attendance
+
+    # Create new attendance record
+    new_attendance = Attendance(
+        student_id=student_id,
+        date=attendance_data.date,
+        status=attendance_data.status,
+        notes=attendance_data.notes
+    )
+
+    db.add(new_attendance)
+    await db.commit()
+    await db.refresh(new_attendance)
+
+    logger.info(f"Attendance created for student {student_id} on {attendance_data.date} by user {current_user.id}")
+
+    return new_attendance
+
+
+@studentRouter.get("/{student_id}/attendance", response_model=AttendanceList)
+async def get_student_attendance(
+    student_id: int,
+    date: str = None,
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get attendance records for a specific student. Optionally filter by date."""
+
+    # Verify student exists
+    result = await db.execute(
+        select(Student).where(Student.id == student_id)
+    )
+    student = result.scalar_one_or_none()
+
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Student with ID {student_id} not found"
+        )
+
+    # Build query
+    query = select(Attendance).where(Attendance.student_id == student_id)
+    
+    # Filter by date if provided
+    if date:
+        query = query.where(Attendance.date == date)
+    
+    query = query.order_by(Attendance.created_at.desc()).offset(skip).limit(limit)
+
+    # Get attendance records
+    attendance_result = await db.execute(query)
+    attendances = attendance_result.scalars().all()
+
+    # Get total count
+    count_query = select(Attendance).where(Attendance.student_id == student_id)
+    if date:
+        count_query = count_query.where(Attendance.date == date)
+    
+    count_result = await db.execute(count_query)
+    total = len(count_result.scalars().all())
+
+    return AttendanceList(attendances=list(attendances), total=total)
+
+
+@studentRouter.put("/{student_id}/attendance/{attendance_id}", response_model=AttendanceResponse)
+async def update_attendance(
+    student_id: int,
+    attendance_id: int,
+    attendance_data: AttendanceUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_president_or_supervisor)
+):
+    """Update an attendance record."""
+
+    result = await db.execute(
+        select(Attendance).where(
+            Attendance.id == attendance_id,
+            Attendance.student_id == student_id
+        )
+    )
+    attendance = result.scalar_one_or_none()
+
+    if not attendance:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Attendance with ID {attendance_id} not found for student {student_id}"
+        )
+
+    # Update fields
+    update_data = attendance_data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(attendance, field, value)
+
+    await db.commit()
+    await db.refresh(attendance)
+
+    logger.info(f"Attendance {attendance_id} updated by user {current_user.id}")
+
+    return attendance
+
+
+@studentRouter.delete("/{student_id}/attendance/{attendance_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_attendance(
+    student_id: int,
+    attendance_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_president_or_supervisor)
+):
+    """Delete an attendance record."""
+
+    result = await db.execute(
+        select(Attendance).where(
+            Attendance.id == attendance_id,
+            Attendance.student_id == student_id
+        )
+    )
+    attendance = result.scalar_one_or_none()
+
+    if not attendance:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Attendance with ID {attendance_id} not found for student {student_id}"
+        )
+
+    await db.delete(attendance)
+    await db.commit()
+
+    logger.info(f"Attendance {attendance_id} deleted by user {current_user.id}")
+
+    return None

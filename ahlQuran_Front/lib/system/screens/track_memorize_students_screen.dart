@@ -4,10 +4,12 @@ import 'dart:developer' as dev;
 import '../new_models/lecture.dart';
 import '../new_models/student.dart';
 import '../new_models/achievement.dart';
+import '../new_models/attendance.dart';
 import '../services/network/api_endpoints.dart';
 import '../services/api_client.dart';
 import '../../controllers/drawer_controller.dart' as drawer;
 import '../widgets/dialogs/achievement.dart';
+import '../widgets/dialogs/attendance.dart';
 import 'base_layout.dart';
 
 class TrackMemorizeStudentsScreen extends StatefulWidget {
@@ -25,6 +27,8 @@ class _TrackMemorizeStudentsScreenState
   List<Student> students = [];
   Map<int, Achievement?> latestAchievements =
       {}; // studentId -> latest achievement
+  Map<int, Attendance?> attendanceRecords =
+      {}; // studentId -> attendance for selected date
   bool isLoading = true;
 
   @override
@@ -92,6 +96,9 @@ class _TrackMemorizeStudentsScreenState
       // Load latest achievement for each student
       await _loadLatestAchievements();
 
+      // Load attendance records for each student
+      await _loadAttendanceRecords();
+
       setState(() {
         isLoading = false;
       });
@@ -122,6 +129,30 @@ class _TrackMemorizeStudentsScreenState
         } catch (e) {
           dev.log('Error loading achievements for student ${student.id}: $e');
           latestAchievements[student.id!] = null;
+        }
+      }
+    }
+  }
+
+  Future<void> _loadAttendanceRecords() async {
+    if (date == null) return;
+
+    for (var student in students) {
+      if (student.id != null) {
+        try {
+          final attendances = await ApiService.fetchList(
+            '${ApiEndpoints.getStudents}${student.id}/attendance?date=$date',
+            Attendance.fromJson,
+          );
+
+          if (attendances.isNotEmpty) {
+            attendanceRecords[student.id!] = attendances.first;
+          } else {
+            attendanceRecords[student.id!] = null;
+          }
+        } catch (e) {
+          dev.log('Error loading attendance for student ${student.id}: $e');
+          attendanceRecords[student.id!] = null;
         }
       }
     }
@@ -158,7 +189,7 @@ class _TrackMemorizeStudentsScreenState
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: const Color(0xFF4DB6AC).withOpacity(0.1),
+          color: const Color(0xFF4DB6AC).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: const Color(0xFF4DB6AC),
@@ -198,6 +229,79 @@ class _TrackMemorizeStudentsScreenState
               overflow: TextOverflow.ellipsis,
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showAttendanceDialog(Student student) {
+    showDialog(
+      context: context,
+      builder: (context) => AttendanceDialog(
+        student: student,
+        date: date ?? '',
+      ),
+    ).then((result) {
+      // Store the attendance if it was saved
+      if (result != null && result is Attendance && student.id != null) {
+        setState(() {
+          attendanceRecords[student.id!] = result;
+        });
+      }
+    });
+  }
+
+  void _showBulkAttendanceDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _BulkAttendanceDialog(
+        students: students,
+        date: date ?? '',
+        initialAttendanceRecords: Map.from(attendanceRecords),
+      ),
+    ).then((result) {
+      // Reload attendance records after dialog closes
+      if (result == true) {
+        _loadAttendanceRecords().then((_) => setState(() {}));
+      }
+    });
+  }
+
+  Widget _buildAttendanceButton(Student student) {
+    final attendance = attendanceRecords[student.id];
+
+    if (attendance == null) {
+      // Show "--" if no attendance recorded
+      return TextButton(
+        onPressed: () => _showAttendanceDialog(student),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        ),
+        child: const Text('--'),
+      );
+    }
+
+    // Show colored status tag if attendance exists
+    return InkWell(
+      onTap: () => _showAttendanceDialog(student),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: attendance.getStatusColor().withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: attendance.getStatusColor(),
+            width: 1,
+          ),
+        ),
+        child: Text(
+          attendance.getStatusArabic(),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: attendance.getStatusColor(),
+          ),
+          textAlign: TextAlign.center,
         ),
       ),
     );
@@ -339,27 +443,10 @@ class _TrackMemorizeStudentsScreenState
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          // Achievement button
+          // Attendance button
           ElevatedButton.icon(
             onPressed: () {
-              // TODO: Handle achievement action
-            },
-            icon: const Icon(Icons.star, size: 18),
-            label: const Text('الإنجاز الجماعي'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFDEB059),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Consistency button
-          ElevatedButton.icon(
-            onPressed: () {
-              // TODO: Handle consistency action
+              _showBulkAttendanceDialog();
             },
             icon: const Icon(Icons.check_circle, size: 18),
             label: const Text('المواظبة'),
@@ -408,7 +495,7 @@ class _TrackMemorizeStudentsScreenState
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -525,22 +612,11 @@ class _TrackMemorizeStudentsScreenState
                           child: _buildAchievementButton(student),
                         ),
                       ),
-                      // Consistency button
+                      // Attendance button
                       Expanded(
                         flex: 2,
                         child: Center(
-                          child: TextButton(
-                            onPressed: () {
-                              // TODO: Handle consistency for this student
-                            },
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                            ),
-                            child: const Text('--'),
-                          ),
+                          child: _buildAttendanceButton(student),
                         ),
                       ),
                     ],
@@ -550,6 +626,427 @@ class _TrackMemorizeStudentsScreenState
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// Bulk Attendance Dialog Widget
+class _BulkAttendanceDialog extends StatefulWidget {
+  final List<Student> students;
+  final String date;
+  final Map<int, Attendance?> initialAttendanceRecords;
+
+  const _BulkAttendanceDialog({
+    required this.students,
+    required this.date,
+    required this.initialAttendanceRecords,
+  });
+
+  @override
+  State<_BulkAttendanceDialog> createState() => _BulkAttendanceDialogState();
+}
+
+class _BulkAttendanceDialogState extends State<_BulkAttendanceDialog> {
+  late Map<int, String?> selectedStatuses;
+  bool isSaving = false;
+
+  final List<Map<String, dynamic>> statusOptions = [
+    {'value': 'present', 'label': 'حضور', 'color': Color(0xFF4CAF50)},
+    {'value': 'late', 'label': 'تأخر', 'color': Color(0xFFFFA726)},
+    {'value': 'absent', 'label': 'غياب', 'color': Color(0xFFEF5350)},
+    {'value': 'excused', 'label': 'عذر', 'color': Color(0xFF42A5F5)},
+  ];
+
+  void _toggleSelectAllForStatus(String status) {
+    setState(() {
+      // Check if all students already have this status
+      bool allHaveStatus = widget.students.every((student) =>
+          student.id != null && selectedStatuses[student.id] == status);
+
+      if (allHaveStatus) {
+        // Deselect all - clear the status for all students
+        for (var student in widget.students) {
+          if (student.id != null) {
+            selectedStatuses[student.id!] = null;
+          }
+        }
+      } else {
+        // Select all - set this status for all students
+        for (var student in widget.students) {
+          if (student.id != null) {
+            selectedStatuses[student.id!] = status;
+          }
+        }
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize selected statuses from existing attendance records
+    selectedStatuses = {};
+    for (var student in widget.students) {
+      if (student.id != null) {
+        final attendance = widget.initialAttendanceRecords[student.id];
+        selectedStatuses[student.id!] = attendance?.status;
+      }
+    }
+  }
+
+  Future<void> _saveAllAttendance() async {
+    setState(() {
+      isSaving = true;
+    });
+
+    try {
+      dev.log(
+          'Starting to save attendance for ${widget.students.length} students');
+      dev.log('Selected statuses: $selectedStatuses');
+
+      int savedCount = 0;
+      int deletedCount = 0;
+
+      // Process each student
+      for (var student in widget.students) {
+        if (student.id == null) continue;
+
+        final currentStatus = selectedStatuses[student.id!];
+        final initialAttendance = widget.initialAttendanceRecords[student.id!];
+
+        // Case 1: Status is null and there was an initial attendance - DELETE
+        if (currentStatus == null && initialAttendance != null) {
+          dev.log('Deleting attendance for student ${student.id}');
+
+          try {
+            await ApiService.delete(
+              '${ApiEndpoints.getStudents}${student.id}/attendance/${initialAttendance.id}',
+            );
+            deletedCount++;
+            dev.log(
+                'Successfully deleted attendance for student ${student.id}');
+          } catch (e) {
+            dev.log('Error deleting attendance for student ${student.id}: $e');
+            // Continue with other students even if one fails
+          }
+        }
+        // Case 2: Status is not null - SAVE/UPDATE
+        else if (currentStatus != null) {
+          final attendanceData = Attendance(
+            studentId: student.id!,
+            date: widget.date,
+            status: currentStatus,
+          );
+
+          dev.log(
+              'Saving attendance for student ${student.id}: ${attendanceData.toJson()}');
+
+          await ApiService.post(
+            '${ApiEndpoints.getStudents}${student.id}/attendance',
+            attendanceData.toJson(),
+            Attendance.fromJson,
+          );
+
+          savedCount++;
+          dev.log('Successfully saved attendance for student ${student.id}');
+        }
+        // Case 3: Status is null and no initial attendance - SKIP (nothing to do)
+      }
+
+      dev.log('Saved: $savedCount, Deleted: $deletedCount students');
+
+      if (mounted) {
+        Navigator.pop(context, true); // Return true to indicate success
+
+        String message = '';
+        if (savedCount > 0 && deletedCount > 0) {
+          message = 'تم حفظ $savedCount وحذف $deletedCount سجلات';
+        } else if (savedCount > 0) {
+          message = 'تم حفظ المواظبة بنجاح ($savedCount طالب)';
+        } else if (deletedCount > 0) {
+          message = 'تم حذف المواظبة ($deletedCount طالب)';
+        } else {
+          message = 'لا توجد تغييرات للحفظ';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: const Color(0xFF4CAF50),
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      dev.log('Error saving bulk attendance: $e');
+      dev.log('Stack trace: $stackTrace');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('فشل في حفظ المواظبة: ${e.toString()}'),
+            backgroundColor: const Color(0xFFEF5350),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isSaving = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.8,
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                color: Color(0xFF4DB6AC),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.white),
+                  ),
+                  const Expanded(
+                    child: Text(
+                      'المواظبة',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(width: 48),
+                ],
+              ),
+            ),
+
+            // Content
+            Expanded(
+              child: Column(
+                children: [
+                  // Table header
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4DB6AC).withValues(alpha: 0.1),
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        // Status columns with checkboxes
+                        ...statusOptions.map((option) {
+                          // Check if all students have this status
+                          bool allSelected = widget.students.every((student) =>
+                              student.id != null &&
+                              selectedStatuses[student.id] == option['value']);
+
+                          return Expanded(
+                            flex: 1,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                InkWell(
+                                  onTap: () => _toggleSelectAllForStatus(
+                                      option['value']),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: option['color']
+                                          .withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Icon(
+                                      allSelected
+                                          ? Icons.check_box
+                                          : Icons.check_box_outline_blank,
+                                      color: option['color'],
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  option['label'],
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                        const SizedBox(width: 16),
+                        // Student name column
+                        const Expanded(
+                          flex: 2,
+                          child: Text(
+                            'الطالب',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.right,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Students list
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: widget.students.length,
+                      itemBuilder: (context, index) {
+                        final student = widget.students[index];
+                        final studentName =
+                            '${student.personalInfo.firstNameAr ?? ''} ${student.personalInfo.lastNameAr ?? ''}';
+                        final isEven = index % 2 == 0;
+
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isEven ? Colors.grey.shade50 : Colors.white,
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Colors.grey.shade200,
+                                width: 1,
+                              ),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              // Status radio buttons
+                              ...statusOptions.map((option) {
+                                final isSelected =
+                                    selectedStatuses[student.id] ==
+                                        option['value'];
+                                return Expanded(
+                                  flex: 1,
+                                  child: InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        selectedStatuses[student.id!] =
+                                            option['value'];
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      child: Icon(
+                                        isSelected
+                                            ? Icons.radio_button_checked
+                                            : Icons.radio_button_unchecked,
+                                        color: isSelected
+                                            ? option['color']
+                                            : Colors.grey,
+                                        size: 24,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }),
+                              const SizedBox(width: 16),
+                              // Student name
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  studentName,
+                                  style: const TextStyle(fontSize: 14),
+                                  textAlign: TextAlign.right,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Save button
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: Colors.grey.shade300,
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: isSaving ? null : _saveAllAttendance,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4DB6AC),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          'حفظ',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
