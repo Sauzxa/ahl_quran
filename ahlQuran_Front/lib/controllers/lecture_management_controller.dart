@@ -70,7 +70,7 @@ class LectureManagementController extends GetxController {
   Future<void> fetchAllLectures() async {
     try {
       final lectures = await ApiService.fetchList<LectureForm>(
-        '${ApiEndpoints.getLectures}/special/lectures',
+        ApiEndpoints.getSpecialLectures,
         LectureForm.fromJson,
       );
 

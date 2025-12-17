@@ -167,18 +167,10 @@ abstract class DialogState<GEC extends GenericEditController>
 
       try {
         final success = await submit();
-
         if (success) {
           Get.back(result: true);
-          Get.snackbar('Success', 'Data submitted successfully',
-              snackPosition: SnackPosition.BOTTOM);
-        } else {
-          Get.snackbar('Error', 'Failed to submit data',
-              snackPosition: SnackPosition.BOTTOM);
         }
       } catch (e) {
-        Get.snackbar('Error', 'An error occurred during submission',
-            snackPosition: SnackPosition.BOTTOM);
         debugPrint('Error submitting form: $e');
       } finally {
         isComplete.value = true;

@@ -23,6 +23,13 @@ class Student implements Model {
   // Constructor for empty form initialization
   Student();
 
+  // Getter for student ID
+  int? get id => personalInfo.studentId is int
+      ? personalInfo.studentId
+      : (personalInfo.studentId != null
+          ? int.tryParse(personalInfo.studentId.toString())
+          : null);
+
   @override
   // Method to check if all required fields are filled
   bool get isComplete {
@@ -54,40 +61,53 @@ class Student implements Model {
   }
 
   static Student fromJson(Map<String, dynamic> json) {
-    final student = Student()
-      ..personalInfo = json['personalInfo'] != null
-          ? PersonalInfo.fromJson(json['personalInfo'])
-          : PersonalInfo()
-      ..accountInfo = json['accountInfo'] != null
-          ? AccountInfo.fromJson(json['accountInfo'])
-          : AccountInfo()
-      ..contactInfo = json['contactInfo'] != null
-          ? ContactInfo.fromJson(json['contactInfo'])
-          : ContactInfo()
-      ..medicalInfo = json['medicalInfo'] != null
-          ? MedicalInfo.fromJson(json['medicalInfo'])
-          : MedicalInfo()
-      ..guardian = json['guardian'] != null
-          ? Guardian.fromJson(json['guardian'])
-          : Guardian()
-      ..student = json['student'] != null
-          ? StudentRelations.fromJson(json['student'])
-          : StudentRelations()
-      ..lectures = json['lectures'] != null
-          ? (json['lectures'] as List)
-              .map((lecture) => Lecture.fromJson(lecture))
-              .toList()
-          : []
-      ..formalEducationInfo = json['formalEducationInfo'] != null
-          ? FormalEducationInfo.fromJson(json['formalEducationInfo'])
-          : FormalEducationInfo()
-      ..subscriptionInfo = json['subscriptionInfo'] != null
-          ? SubscriptionInfo.fromJson(json['subscriptionInfo'])
-          : SubscriptionInfo();
+    final student = Student();
 
-    // Map top-level ID to personalInfo.studentId if available
-    if (json['id'] != null) {
-      student.personalInfo.studentId = json['id'];
+    // First, extract the top-level ID and store it
+    final topLevelId = json['id'];
+
+    student.personalInfo = json['personalInfo'] != null
+        ? PersonalInfo.fromJson(json['personalInfo'])
+        : PersonalInfo();
+
+    student.accountInfo = json['accountInfo'] != null
+        ? AccountInfo.fromJson(json['accountInfo'])
+        : AccountInfo();
+
+    student.contactInfo = json['contactInfo'] != null
+        ? ContactInfo.fromJson(json['contactInfo'])
+        : ContactInfo();
+
+    student.medicalInfo = json['medicalInfo'] != null
+        ? MedicalInfo.fromJson(json['medicalInfo'])
+        : MedicalInfo();
+
+    student.guardian = json['guardian'] != null
+        ? Guardian.fromJson(json['guardian'])
+        : Guardian();
+
+    student.student = json['student'] != null
+        ? StudentRelations.fromJson(json['student'])
+        : StudentRelations();
+
+    student.lectures = json['lectures'] != null
+        ? (json['lectures'] as List)
+            .map((lecture) => Lecture.fromJson(lecture))
+            .toList()
+        : [];
+
+    student.formalEducationInfo = json['formalEducationInfo'] != null
+        ? FormalEducationInfo.fromJson(json['formalEducationInfo'])
+        : FormalEducationInfo();
+
+    student.subscriptionInfo = json['subscriptionInfo'] != null
+        ? SubscriptionInfo.fromJson(json['subscriptionInfo'])
+        : SubscriptionInfo();
+
+    // Map top-level ID to personalInfo.studentId
+    // This ensures the ID is available even if personalInfo doesn't have it
+    if (topLevelId != null) {
+      student.personalInfo.studentId = topLevelId;
     }
 
     return student;

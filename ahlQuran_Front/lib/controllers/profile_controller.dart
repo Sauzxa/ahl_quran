@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileController extends GetxController {
   final avatarPath = 'assets/avatar.png'.obs;
@@ -9,32 +11,105 @@ class ProfileController extends GetxController {
   final userRole = ''.obs;
   final userEmail = ''.obs;
   final token = ''.obs;
+  final isReady = false.obs;
 
-  final _storage = const FlutterSecureStorage();
+  // Storage with fallback mechanism
+  late FlutterSecureStorage _storage;
+  SharedPreferences? _prefs;
+  bool _isStorageInitialized = false;
+  bool _useSecureStorage = false;
 
   @override
   void onInit() {
     super.onInit();
-    fetchUserProfile();
+    _initStorage();
+  }
+
+  Future<void> _initStorage() async {
+    try {
+      // Initialize SharedPreferences first (always works)
+      _prefs = await SharedPreferences.getInstance();
+
+      // Disable secure storage on Windows to avoid credential manager issues
+      if (defaultTargetPlatform == TargetPlatform.windows) {
+        debugPrint(
+            'Windows detected: Using SharedPreferences instead of secure storage');
+        _useSecureStorage = false;
+        _isStorageInitialized = true;
+        await fetchUserProfile();
+        return;
+      }
+
+      // Try to initialize secure storage for other platforms
+      _storage = const FlutterSecureStorage(
+        aOptions: AndroidOptions(
+          encryptedSharedPreferences: true,
+        ),
+        iOptions: IOSOptions(
+          accessibility: KeychainAccessibility.first_unlock,
+        ),
+      );
+
+      // Test if secure storage works
+      try {
+        await _storage.write(key: '_test', value: 'test');
+        await _storage.delete(key: '_test');
+        _useSecureStorage = true;
+        debugPrint('Secure storage initialized successfully');
+      } catch (testError) {
+        debugPrint(
+            'Secure storage failed, using SharedPreferences: $testError');
+        _useSecureStorage = false;
+      }
+
+      _isStorageInitialized = true;
+      await fetchUserProfile();
+    } catch (e) {
+      debugPrint('Storage initialization error: $e');
+      _isStorageInitialized = false;
+    }
+  }
+
+  Future<String?> _readValue(String key) async {
+    try {
+      if (_useSecureStorage) {
+        return await _storage.read(key: key);
+      } else {
+        return _prefs?.getString(key);
+      }
+    } catch (e) {
+      debugPrint('Error reading $key, trying fallback: $e');
+      return _prefs?.getString(key);
+    }
   }
 
   Future<void> fetchUserProfile() async {
-    // Load user data from secure storage
-    final storedFirstName = await _storage.read(key: 'firstName');
-    final storedLastName = await _storage.read(key: 'lastName');
-    final storedUserName = await _storage.read(key: 'userName');
-    final storedEmail = await _storage.read(key: 'userEmail');
-    final storedRole = await _storage.read(key: 'userRole');
-    final storedAvatar = await _storage.read(key: 'avatarPath');
-    final storedToken = await _storage.read(key: 'token');
+    if (!_isStorageInitialized) {
+      isReady.value = true;
+      return;
+    }
 
-    if (storedFirstName != null) firstName.value = storedFirstName;
-    if (storedLastName != null) lastName.value = storedLastName;
-    if (storedUserName != null) userName.value = storedUserName;
-    if (storedEmail != null) userEmail.value = storedEmail;
-    if (storedRole != null) userRole.value = storedRole;
-    if (storedAvatar != null) avatarPath.value = storedAvatar;
-    if (storedToken != null) token.value = storedToken;
+    try {
+      final storedFirstName = await _readValue('firstName');
+      final storedLastName = await _readValue('lastName');
+      final storedUserName = await _readValue('userName');
+      final storedEmail = await _readValue('userEmail');
+      final storedRole = await _readValue('userRole');
+      final storedAvatar = await _readValue('avatarPath');
+      final storedToken = await _readValue('token');
+
+      if (storedFirstName != null) firstName.value = storedFirstName;
+      if (storedLastName != null) lastName.value = storedLastName;
+      if (storedUserName != null) userName.value = storedUserName;
+      if (storedEmail != null) userEmail.value = storedEmail;
+      if (storedRole != null) userRole.value = storedRole;
+      if (storedAvatar != null) avatarPath.value = storedAvatar;
+      if (storedToken != null) token.value = storedToken;
+    } catch (e) {
+      debugPrint('Error fetching profile: $e');
+    } finally {
+      isReady.value = true;
+    }
   }
 
   Future<void> updateProfile({
@@ -46,33 +121,77 @@ class ProfileController extends GetxController {
     String? last,
     String? accessToken,
   }) async {
+    // CRITICAL: Update in-memory values FIRST before any storage operations
+    // This ensures app works even if storage fails
     avatarPath.value = avatar;
     userName.value = name;
     userRole.value = role;
     if (email != null) userEmail.value = email;
     if (first != null) firstName.value = first;
     if (last != null) lastName.value = last;
-    if (accessToken != null) token.value = accessToken;
+    if (accessToken != null && accessToken.isNotEmpty) {
+      token.value = accessToken;
+    }
 
-    // Save to secure storage
-    await _storage.write(key: 'avatarPath', value: avatar);
-    await _storage.write(key: 'userName', value: name);
-    await _storage.write(key: 'userRole', value: role);
-    if (email != null) await _storage.write(key: 'userEmail', value: email);
-    if (first != null) await _storage.write(key: 'firstName', value: first);
-    if (last != null) await _storage.write(key: 'lastName', value: last);
-    if (accessToken != null)
-      await _storage.write(key: 'token', value: accessToken);
+    // Try to save to secure storage
+    if (!_isStorageInitialized) {
+      debugPrint('Storage not initialized, skipping persistence');
+      return;
+    }
+
+    try {
+      await _writeValue('avatarPath', avatar);
+      await _writeValue('userName', name);
+      await _writeValue('userRole', role);
+      if (email != null) await _writeValue('userEmail', email);
+      if (first != null) await _writeValue('firstName', first);
+      if (last != null) await _writeValue('lastName', last);
+
+      if (accessToken != null && accessToken.isNotEmpty) {
+        debugPrint('Saving token (length: ${accessToken.length})');
+        await _writeValue('token', accessToken);
+        debugPrint('Token saved successfully');
+      }
+
+      debugPrint('Profile saved successfully');
+    } catch (e) {
+      debugPrint('Error saving profile: $e');
+    }
+  }
+
+  Future<void> _writeValue(String key, String value) async {
+    try {
+      if (_useSecureStorage) {
+        await _storage.write(key: key, value: value);
+      } else {
+        await _prefs?.setString(key, value);
+      }
+    } catch (e) {
+      debugPrint('Error writing $key, using fallback: $e');
+      await _prefs?.setString(key, value);
+    }
   }
 
   Future<void> clearProfile() async {
-    // Clear all stored data on logout
-    await _storage.deleteAll();
+    // Clear in-memory values
     avatarPath.value = 'assets/avatar.png';
     userName.value = '';
     firstName.value = '';
     lastName.value = '';
     userRole.value = '';
     userEmail.value = '';
+    token.value = '';
+
+    // Clear storage
+    if (_isStorageInitialized) {
+      try {
+        if (_useSecureStorage) {
+          await _storage.deleteAll();
+        }
+        await _prefs?.clear();
+      } catch (e) {
+        debugPrint('Error clearing storage: $e');
+      }
+    }
   }
 }

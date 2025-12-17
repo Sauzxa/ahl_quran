@@ -79,15 +79,15 @@ def map_student_to_response(student: Student) -> StudentResponse:
         schoolName=student.school_name
     )
 
-    # Lectures (Sessions)
+    # Lectures
     lectures_info = []
     if student.participations:
         for p in student.participations:
-            if p.session:
+            if p.lecture:
                 lectures_info.append(LectureInfo(
-                    lectureId=p.session.id,
-                    lectureNameAr=p.session.topic,
-                    lectureNameEn=p.session.topic # Fallback
+                    lectureId=p.lecture.id,
+                    lectureNameAr=p.lecture.lecture_name_ar,
+                    lectureNameEn=p.lecture.lecture_name_en
                 ))
 
     # Medical Info (Placeholder)
@@ -200,7 +200,8 @@ async def create_student(
         for lecture in student_data.lectures:
             participation = SessionParticipation(
                 student_id=new_student.id,
-                session_id=lecture.lecture_id,
+                session_id=None,  # Will be set when actual sessions are created
+                lecture_id=lecture.lecture_id,
                 # Add other fields if needed, e.g. join_date
             )
             db.add(participation)
@@ -212,7 +213,7 @@ async def create_student(
         select(Student)
         .options(
             selectinload(Student.user),
-            selectinload(Student.participations).selectinload(SessionParticipation.session)
+            selectinload(Student.participations).selectinload(SessionParticipation.lecture)
         )
         .where(Student.id == new_student.id)
     )
@@ -227,25 +228,38 @@ async def create_student(
 async def list_students(
     skip: int = 0,
     limit: int = 100,
+    lecture_id: int = None,
     db: AsyncSession = Depends(get_db),
     # current_user: User = Depends(require_president_or_supervisor)
 ):
-    """Get all students. Only presidents and supervisors can view all students."""
+    """Get all students. Optionally filter by lecture_id. Only presidents and supervisors can view all students."""
 
-    result = await db.execute(
-        select(Student)
-        .options(
-            selectinload(Student.user),
-            selectinload(Student.participations).selectinload(SessionParticipation.session)
-        )
-        .offset(skip)
-        .limit(limit)
+    # Build query with optional lecture filter
+    query = select(Student).options(
+        selectinload(Student.user),
+        selectinload(Student.participations).selectinload(SessionParticipation.lecture)
     )
-    students = result.scalars().all()
+    
+    # If lecture_id is provided, filter students by lecture
+    if lecture_id is not None:
+        query = query.join(Student.participations).where(
+            SessionParticipation.lecture_id == lecture_id
+        ).distinct()
+    
+    query = query.offset(skip).limit(limit)
+    
+    result = await db.execute(query)
+    students = result.scalars().unique().all()
 
-    # Get total count
-    count_result = await db.execute(select(Student))
-    total = len(count_result.scalars().all())
+    # Get total count with same filter
+    count_query = select(Student)
+    if lecture_id is not None:
+        count_query = count_query.join(Student.participations).where(
+            SessionParticipation.lecture_id == lecture_id
+        ).distinct()
+    
+    count_result = await db.execute(count_query)
+    total = len(count_result.scalars().unique().all())
 
     student_responses = [map_student_to_response(student) for student in students]
 
@@ -264,7 +278,7 @@ async def get_student(
         select(Student)
         .options(
             selectinload(Student.user),
-            selectinload(Student.participations).selectinload(SessionParticipation.session)
+            selectinload(Student.participations).selectinload(SessionParticipation.lecture)
         )
         .where(Student.id == student_id)
     )
@@ -292,7 +306,7 @@ async def update_student(
         select(Student)
         .options(
             selectinload(Student.user),
-            selectinload(Student.participations).selectinload(SessionParticipation.session)
+            selectinload(Student.participations).selectinload(SessionParticipation.lecture)
         )
         .where(Student.id == student_id)
     )
@@ -360,7 +374,7 @@ async def update_student_full(
         select(Student)
         .options(
             selectinload(Student.user),
-            selectinload(Student.participations).selectinload(SessionParticipation.session)
+            selectinload(Student.participations).selectinload(SessionParticipation.lecture)
         )
         .where(Student.id == student_id)
     )
@@ -437,7 +451,8 @@ async def update_student_full(
         for lecture in student_data.lectures:
             participation = SessionParticipation(
                 student_id=student_id,
-                session_id=lecture.lecture_id,
+                session_id=None,  # Will be set when actual sessions are created
+                lecture_id=lecture.lecture_id,
             )
             db.add(participation)
 
@@ -448,7 +463,7 @@ async def update_student_full(
         select(Student)
         .options(
             selectinload(Student.user),
-            selectinload(Student.participations).selectinload(SessionParticipation.session)
+            selectinload(Student.participations).selectinload(SessionParticipation.lecture)
         )
         .where(Student.id == student_id)
     )
@@ -524,7 +539,8 @@ async def add_achievement(
         to_surah=achievement_data.to_surah,
         from_verse=achievement_data.from_verse,
         to_verse=achievement_data.to_verse,
-        note=achievement_data.note
+        note=achievement_data.note,
+        achievement_type=achievement_data.achievement_type
     )
 
     db.add(new_achievement)

@@ -1,14 +1,25 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
+from enum import Enum
+
+
+class AchievementType(str, Enum):
+    NORMAL = "normal"
+    SMALL = "small"
+    BIG = "big"
+    
+    def __str__(self):
+        return self.value
 
 
 class AchievementBase(BaseModel):
-    from_surah: str = Field(..., min_length=1, max_length=50, example="Al-Baqarah")
-    to_surah: str = Field(..., min_length=1, max_length=50, example="Al-Baqarah")
+    from_surah: int = Field(..., ge=1, le=114, example=2)  # Chapter number 1-114
+    to_surah: int = Field(..., ge=1, le=114, example=2)    # Chapter number 1-114
     from_verse: int = Field(..., gt=0, example=1)
     to_verse: int = Field(..., gt=0, example=10)
     note: Optional[str] = Field(None, example="Good memorization")
+    achievement_type: AchievementType = Field(default=AchievementType.NORMAL, example="normal")
 
 
 class AchievementCreate(AchievementBase):
@@ -16,11 +27,12 @@ class AchievementCreate(AchievementBase):
 
 
 class AchievementUpdate(BaseModel):
-    from_surah: Optional[str] = Field(None, min_length=1, max_length=50)
-    to_surah: Optional[str] = Field(None, min_length=1, max_length=50)
+    from_surah: Optional[int] = Field(None, ge=1, le=114)  # Chapter number 1-114
+    to_surah: Optional[int] = Field(None, ge=1, le=114)    # Chapter number 1-114
     from_verse: Optional[int] = Field(None, gt=0)
     to_verse: Optional[int] = Field(None, gt=0)
     note: Optional[str] = None
+    achievement_type: Optional[AchievementType] = None
 
 
 class AchievementResponse(AchievementBase):

@@ -33,10 +33,19 @@ async def get_current_user(
     # Remove "Bearer " prefix if present
     token = access_token.replace("Bearer ", "")
 
-    logger.info(f"valid toke : {token}")
+    logger.info(f"valid token : {token}")
     # Decode token
     payload = decode_token(token)
-    logger.info(f"valid payloadddd : {payload}")
+    logger.info(f"valid payload : {payload}")
+    
+    # Check if token decode failed
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
     # Check token type
     token_type = payload.get("role")
 

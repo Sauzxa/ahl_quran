@@ -8,8 +8,11 @@ class Routes {
 
   static const addStudent = '/add_student';
   static const addGuardian = '/add_guardian';
+  static const addTeacher = '/add_teacher';
   static const addLecture = '/add_lecture';
   static const addAchievement = '/add_achievement';
+  static const trackAndMemorize = '/trackandmemorize';
+  static const trackAndMemorizeStudents = '/trackandmemorize/students';
 
   static const attendance = '/attendance';
 

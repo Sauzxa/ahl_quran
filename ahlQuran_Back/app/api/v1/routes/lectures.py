@@ -83,8 +83,8 @@ async def get_all_lectures(
         for teacher in lecture.teachers:
             teachers_data.append(TeacherResponse(
                 teacher_id=teacher.id,
-                first_name=teacher.user.first_name if teacher.user else None,
-                last_name=teacher.user.last_name if teacher.user else None
+                first_name=teacher.user.firstname if teacher.user else None,
+                last_name=teacher.user.lastname if teacher.user else None
             ))
         
         # Build schedules response
@@ -151,8 +151,8 @@ async def get_lecture_by_id(
     for teacher in lecture.teachers:
         teachers_data.append(TeacherResponse(
             teacher_id=teacher.id,
-            first_name=teacher.user.first_name if teacher.user else None,
-            last_name=teacher.user.last_name if teacher.user else None
+            first_name=teacher.user.firstname if teacher.user else None,
+            last_name=teacher.user.lastname if teacher.user else None
         ))
     
     # Build schedules response
@@ -202,13 +202,15 @@ async def create_lecture(
     db.add(new_lecture)
     await db.flush()  # Get the lecture ID
     
-    # Add teachers if provided
+    # Add teachers if provided - use direct SQL to avoid lazy loading
     if lecture_data.teachers:
-        for teacher_info in lecture_data.teachers:
-            teacher_query = await db.execute(select(Teacher).where(Teacher.id == teacher_info.teacher_id))
-            teacher = teacher_query.scalar_one_or_none()
-            if teacher:
-                new_lecture.teachers.append(teacher)
+        teacher_ids = [t.teacher_id for t in lecture_data.teachers]
+        teachers_query = await db.execute(select(Teacher).where(Teacher.id.in_(teacher_ids)))
+        teachers = teachers_query.scalars().all()
+        
+        # Now refresh with teachers loaded and assign
+        await db.refresh(new_lecture, ['teachers'])
+        new_lecture.teachers = list(teachers)
     
     # Add schedules
     for schedule_data in lecture_data.schedules:
@@ -237,8 +239,8 @@ async def create_lecture(
     for teacher in lecture.teachers:
         teachers_data.append(TeacherResponse(
             teacher_id=teacher.id,
-            first_name=teacher.user.first_name if teacher.user else None,
-            last_name=teacher.user.last_name if teacher.user else None
+            first_name=teacher.user.firstname if teacher.user else None,
+            last_name=teacher.user.lastname if teacher.user else None
         ))
     
     schedules_data = []
@@ -298,14 +300,14 @@ async def update_lecture(
     lecture.category = lecture_data.lecture.category
     lecture.shown_on_website = lecture_data.lecture.shown_on_website
     
-    # Update teachers - clear and re-add
-    lecture.teachers.clear()
+    # Update teachers - use direct assignment to avoid lazy loading
     if lecture_data.teachers:
-        for teacher_info in lecture_data.teachers:
-            teacher_query = await db.execute(select(Teacher).where(Teacher.id == teacher_info.teacher_id))
-            teacher = teacher_query.scalar_one_or_none()
-            if teacher:
-                lecture.teachers.append(teacher)
+        teacher_ids = [t.teacher_id for t in lecture_data.teachers]
+        teachers_query = await db.execute(select(Teacher).where(Teacher.id.in_(teacher_ids)))
+        teachers = teachers_query.scalars().all()
+        lecture.teachers = list(teachers)
+    else:
+        lecture.teachers = []
     
     # Update schedules - delete old ones and create new ones
     schedules_to_delete = await db.execute(select(WeeklySchedule).where(WeeklySchedule.lecture_id == lecture_id))
@@ -345,8 +347,8 @@ async def update_lecture(
     for teacher in lecture.teachers:
         teachers_data.append(TeacherResponse(
             teacher_id=teacher.id,
-            first_name=teacher.user.first_name if teacher.user else None,
-            last_name=teacher.user.last_name if teacher.user else None
+            first_name=teacher.user.firstname if teacher.user else None,
+            last_name=teacher.user.lastname if teacher.user else None
         ))
     
     schedules_data = []

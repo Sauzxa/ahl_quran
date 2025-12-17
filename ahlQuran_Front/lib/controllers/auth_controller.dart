@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import '../system/services/network/api_endpoints.dart';
+import '../system/utils/snackbar_helper.dart';
 import '../routes/app_routes.dart';
 import 'profile_controller.dart';
 import 'admin_controller.dart';
@@ -65,14 +66,9 @@ class AuthController extends GetxController {
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         // Success - show message about pending approval
-        final responseData = jsonDecode(response.body);
-        Get.snackbar(
-          'تم إنشاء الحساب بنجاح',
+        final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+        showSuccessSnackbar(
           responseData['message'] ?? 'حسابك قيد المراجعة من قبل المسؤول',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Get.theme.colorScheme.primary,
-          colorText: Get.theme.colorScheme.onPrimary,
-          duration: const Duration(seconds: 5),
         );
 
         // Navigate back to login
@@ -80,13 +76,7 @@ class AuthController extends GetxController {
       } else {
         // Error - parse and clean the response
         String errorMsg = _parseErrorMessage(response.body);
-        Get.snackbar(
-          'خطأ في إنشاء الحساب',
-          errorMsg,
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Get.theme.colorScheme.error,
-          colorText: Get.theme.colorScheme.onError,
-        );
+        showErrorSnackbar(errorMsg);
       }
     } catch (e) {
       print('Signup error: $e');
@@ -162,7 +152,7 @@ class AuthController extends GetxController {
       print('Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
+        final responseData = jsonDecode(utf8.decode(response.bodyBytes));
 
         print('Full response data: $responseData');
 
@@ -181,20 +171,11 @@ class AuthController extends GetxController {
 
           print('Navigating to admin dashboard...');
 
-          // Navigate to admin dashboard first
+          // Navigate to admin dashboard
           Get.offAllNamed(Routes.adminDashboard);
 
-          // Then show success message after a short delay
-          Future.delayed(const Duration(milliseconds: 300), () {
-            Get.snackbar(
-              'تم تسجيل الدخول بنجاح',
-              'مرحباً بك في لوحة تحكم المسؤول',
-              snackPosition: SnackPosition.TOP,
-              backgroundColor: Get.theme.colorScheme.primary,
-              colorText: Get.theme.colorScheme.onPrimary,
-              duration: const Duration(seconds: 2),
-            );
-          });
+          // Show snackbar (helper will handle timing)
+          showSuccessSnackbar('مرحباً بك في لوحة تحكم المسؤول');
 
           return;
         }
@@ -212,6 +193,23 @@ class AuthController extends GetxController {
 
         // Update profile controller with user data
         final profileController = Get.find<ProfileController>();
+
+        // Safely extract and validate access token
+        String? accessToken;
+        try {
+          final tokenValue = responseData['access_token'];
+          if (tokenValue != null && tokenValue.toString().trim().isNotEmpty) {
+            accessToken = tokenValue.toString().trim();
+            print('Token extracted: ${accessToken.length} characters');
+          } else {
+            print('No valid token in response');
+            accessToken = null;
+          }
+        } catch (e) {
+          print('Error extracting token: $e');
+          accessToken = null;
+        }
+
         await profileController.updateProfile(
           avatar: 'assets/avatar.png',
           name: email,
@@ -219,23 +217,17 @@ class AuthController extends GetxController {
           email: email,
           first: firstName,
           last: lastName,
-          accessToken: responseData['access_token'],
+          accessToken: accessToken,
         );
 
         print(
             'Profile updated - First: ${profileController.firstName.value}, Last: ${profileController.lastName.value}');
 
-        // Navigate to dashboard immediately
+        // Navigate to dashboard
         Get.offAllNamed(Routes.dashboardPage);
 
-        // Show success message
-        Get.snackbar(
-          'تم تسجيل الدخول بنجاح',
-          'مرحباً بك',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Get.theme.colorScheme.primary,
-          colorText: Get.theme.colorScheme.onPrimary,
-        );
+        // Show snackbar (helper will handle timing)
+        showSuccessSnackbar('مرحباً بك');
       } else {
         // Error - parse and clean the response
         String errorMsg = _parseErrorMessage(response.body);
