@@ -6,9 +6,6 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/header.dart
 import './base_layout.dart';
 
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_teachers.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/guardian_managment.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/attendance/attendance.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_records.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/track_and_memorize_screen.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/screens/report1_screen.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/stats/stat1.dart';
@@ -48,7 +45,7 @@ final List<DashboardTileConfig> tiles = [
     label: 'حضور الطلاب',
     icon: Icons.event_available,
     bigIcon: Icons.event_available,
-    page: () => AttendanceScreen(),
+    route: Routes.attendance,
   ),
   DashboardTileConfig(
     label: 'حضور المعلمين',
