@@ -240,3 +240,193 @@ async def delete_teacher(
 @teacherRouter.post("/session_creation", response_model=dict)
 async def create_teacher_session():
     return {"detail": "Session creation endpoint - to be implemented"}
+
+
+
+# ==================== TEACHER ATTENDANCE OPERATIONS ====================
+
+from app.models.teacher_attendance import TeacherAttendance
+from app.schemas.teacher_attendance import (
+    TeacherAttendanceCreate,
+    TeacherAttendanceUpdate,
+    TeacherAttendanceResponse,
+    TeacherAttendanceList
+)
+
+
+@teacherRouter.post("/{teacher_id}/attendance", response_model=TeacherAttendanceResponse, status_code=status.HTTP_201_CREATED)
+async def create_teacher_attendance(
+    teacher_id: int,
+    attendance_data: TeacherAttendanceCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_president_or_supervisor)
+):
+    """Create or update attendance record for a teacher on a specific date."""
+
+    # Verify teacher exists
+    result = await db.execute(
+        select(Teacher).where(Teacher.id == teacher_id)
+    )
+    teacher = result.scalar_one_or_none()
+
+    if not teacher:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Teacher with ID {teacher_id} not found"
+        )
+
+    # Validate attendance data belongs to the correct teacher
+    if attendance_data.teacher_id != teacher_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Teacher ID in URL must match teacher_id in request body"
+        )
+
+    # Check if attendance already exists for this teacher and date
+    existing_result = await db.execute(
+        select(TeacherAttendance).where(
+            TeacherAttendance.teacher_id == teacher_id,
+            TeacherAttendance.date == attendance_data.date
+        )
+    )
+    existing_attendance = existing_result.scalar_one_or_none()
+
+    if existing_attendance:
+        # Update existing attendance
+        existing_attendance.status = attendance_data.status
+        existing_attendance.notes = attendance_data.notes
+        await db.commit()
+        await db.refresh(existing_attendance)
+        logger.info(f"Teacher attendance updated for teacher {teacher_id} on {attendance_data.date} by user {current_user.id}")
+        return existing_attendance
+
+    # Create new attendance record
+    new_attendance = TeacherAttendance(
+        teacher_id=teacher_id,
+        date=attendance_data.date,
+        status=attendance_data.status,
+        notes=attendance_data.notes
+    )
+
+    db.add(new_attendance)
+    await db.commit()
+    await db.refresh(new_attendance)
+
+    logger.info(f"Teacher attendance created for teacher {teacher_id} on {attendance_data.date} by user {current_user.id}")
+
+    return new_attendance
+
+
+@teacherRouter.get("/{teacher_id}/attendance", response_model=TeacherAttendanceList)
+async def get_teacher_attendance(
+    teacher_id: int,
+    date: str = None,
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_president_or_supervisor)
+):
+    """Get attendance records for a specific teacher. Optionally filter by date."""
+
+    # Verify teacher exists
+    result = await db.execute(
+        select(Teacher).where(Teacher.id == teacher_id)
+    )
+    teacher = result.scalar_one_or_none()
+
+    if not teacher:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Teacher with ID {teacher_id} not found"
+        )
+
+    # Build query
+    query = select(TeacherAttendance).where(TeacherAttendance.teacher_id == teacher_id)
+    
+    # Filter by date if provided
+    if date:
+        query = query.where(TeacherAttendance.date == date)
+    
+    query = query.order_by(TeacherAttendance.created_at.desc()).offset(skip).limit(limit)
+
+    # Get attendance records
+    attendance_result = await db.execute(query)
+    attendances = attendance_result.scalars().all()
+
+    # Get total count
+    count_query = select(TeacherAttendance).where(TeacherAttendance.teacher_id == teacher_id)
+    if date:
+        count_query = count_query.where(TeacherAttendance.date == date)
+    
+    count_result = await db.execute(count_query)
+    total = len(count_result.scalars().all())
+
+    return TeacherAttendanceList(attendances=list(attendances), total=total)
+
+
+@teacherRouter.put("/{teacher_id}/attendance/{attendance_id}", response_model=TeacherAttendanceResponse)
+async def update_teacher_attendance(
+    teacher_id: int,
+    attendance_id: int,
+    attendance_data: TeacherAttendanceUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_president_or_supervisor)
+):
+    """Update a teacher attendance record."""
+
+    result = await db.execute(
+        select(TeacherAttendance).where(
+            TeacherAttendance.id == attendance_id,
+            TeacherAttendance.teacher_id == teacher_id
+        )
+    )
+    attendance = result.scalar_one_or_none()
+
+    if not attendance:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Attendance with ID {attendance_id} not found for teacher {teacher_id}"
+        )
+
+    # Update fields
+    update_data = attendance_data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(attendance, field, value)
+
+    await db.commit()
+    await db.refresh(attendance)
+
+    logger.info(f"Teacher attendance {attendance_id} updated by user {current_user.id}")
+
+    return attendance
+
+
+@teacherRouter.delete("/{teacher_id}/attendance/{attendance_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_teacher_attendance(
+    teacher_id: int,
+    attendance_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_president_or_supervisor)
+):
+    """Delete a teacher attendance record."""
+
+    result = await db.execute(
+        select(TeacherAttendance).where(
+            TeacherAttendance.id == attendance_id,
+            TeacherAttendance.teacher_id == teacher_id
+        )
+    )
+    attendance = result.scalar_one_or_none()
+
+    if not attendance:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Attendance with ID {attendance_id} not found for teacher {teacher_id}"
+        )
+
+    await db.delete(attendance)
+    await db.commit()
+
+    logger.info(f"Teacher attendance {attendance_id} deleted by user {current_user.id}")
+
+    return None
