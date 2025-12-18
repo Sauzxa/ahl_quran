@@ -15,6 +15,7 @@ class Routes {
   static const trackAndMemorizeStudents = '/trackandmemorize/students';
 
   static const attendance = '/attendance';
+  static const attendanceStudents = '/attendance/students';
 
   static const examPage = '/exams';
   static const examRecords = '/exams/records';

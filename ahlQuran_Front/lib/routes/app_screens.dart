@@ -9,7 +9,6 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/guardian_manageme
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/lecture_management_binding.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/teacher_management_binding.dart';
 //import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/starter.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/attendance_binding.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/charts/stat1_binding.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/charts/stat2_binding.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/charts/stat3_binding.dart';
@@ -33,7 +32,6 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/teacher_man
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/achievement_managment.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/login.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/admin_dashboard.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/attendance/attendance.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/testpage.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/flipcard.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/onboarding.dart';
@@ -55,6 +53,8 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/create_acco
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/dashboardScreen.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/track_and_memorize_screen.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/track_memorize_students_screen.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/attendance_selection_screen.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/attendance_students_screen.dart';
 // App routes
 import 'package:the_doctarine_of_the_ppl_of_the_quran/routes/app_routes.dart';
 
@@ -128,8 +128,12 @@ class AppScreens {
     ),
     GetPage(
       name: Routes.attendance,
-      page: () => AttendanceScreen(),
-      binding: AttendanceBinding(),
+      page: () => const AttendanceSelectionScreen(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: Routes.attendanceStudents,
+      page: () => const AttendanceStudentsScreen(),
       middlewares: [AuthMiddleware()],
     ),
     GetPage(
