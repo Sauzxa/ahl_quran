@@ -542,7 +542,8 @@ async def add_achievement(
         from_verse=achievement_data.from_verse,
         to_verse=achievement_data.to_verse,
         note=achievement_data.note,
-        achievement_type=achievement_data.achievement_type
+        achievement_type=achievement_data.achievement_type,
+        date=achievement_data.date
     )
 
     db.add(new_achievement)
@@ -559,10 +560,11 @@ async def get_student_achievements(
     student_id: int,
     skip: int = 0,
     limit: int = 100,
+    date: str = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Get all achievements for a specific student."""
+    """Get all achievements for a specific student, optionally filtered by date."""
 
     # Verify student exists
     result = await db.execute(
@@ -576,20 +578,27 @@ async def get_student_achievements(
             detail=f"Student with ID {student_id} not found"
         )
 
+    # Build query with optional date filter
+    query = select(Achievement).where(Achievement.student_id == student_id)
+    
+    if date:
+        query = query.where(Achievement.date == date)
+    
     # Get achievements
     achievements_result = await db.execute(
-        select(Achievement)
-        .where(Achievement.student_id == student_id)
+        query
         .offset(skip)
         .limit(limit)
         .order_by(Achievement.created_at.desc())
     )
     achievements = achievements_result.scalars().all()
 
-    # Get total count
-    count_result = await db.execute(
-        select(Achievement).where(Achievement.student_id == student_id)
-    )
+    # Get total count with same filter
+    count_query = select(Achievement).where(Achievement.student_id == student_id)
+    if date:
+        count_query = count_query.where(Achievement.date == date)
+    
+    count_result = await db.execute(count_query)
     total = len(count_result.scalars().all())
 
     return AchievementList(achievements=list(achievements), total=total)

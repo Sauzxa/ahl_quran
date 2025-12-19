@@ -451,11 +451,24 @@ class StudentManagementScreen extends GetView<StudentManagementController> {
     );
   }
 
-  void _showAddStudentDialog() {
-    Get.dialog(
+  void _showAddStudentDialog() async {
+    final result = await Get.dialog(
       const StudentDialog(dialogHeader: 'إضافة طالب'),
       barrierDismissible: false,
     );
+
+    if (result == true) {
+      // Show success snackbar
+      Get.snackbar(
+        'نجح',
+        'تم إضافة الطالب بنجاح',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+      );
+
+      // Refresh the student list
+      controller.fetchAllStudents();
+    }
   }
 
   void _showEditStudentDialog(Student student) {
@@ -474,9 +487,19 @@ class StudentManagementScreen extends GetView<StudentManagementController> {
     Get.dialog(
       const StudentDialog(dialogHeader: 'تعديل بيانات الطالب'),
       barrierDismissible: false,
-    ).then((_) {
-      // Refresh the student list after dialog closes
-      controller.refresh();
+    ).then((result) {
+      if (result == true) {
+        // Show success snackbar
+        Get.snackbar(
+          'نجح',
+          'تم تحديث بيانات الطالب بنجاح',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 2),
+        );
+
+        // Refresh the student list
+        controller.fetchAllStudents();
+      }
 
       // Clean up the controller
       if (Get.isRegistered<GenericEditController<Student>>()) {

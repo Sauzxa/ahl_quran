@@ -55,6 +55,17 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/track_and_m
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/track_memorize_students_screen.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/attendance_selection_screen.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/attendance_students_screen.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/teacher_attendance_selection_screen.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/teacher_attendance_list_screen.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/reports_menu_screen.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/daily_achievement_report_selection_screen.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/daily_achievement_report_screen.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/attendance_report_selection_screen.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/attendance_report_screen.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/student_detail_report_selection_screen.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/student_detail_report_screen.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/lecture_detail_report_selection_screen.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/lecture_detail_report_screen.dart';
 // App routes
 import 'package:the_doctarine_of_the_ppl_of_the_quran/routes/app_routes.dart';
 
@@ -134,6 +145,61 @@ class AppScreens {
     GetPage(
       name: Routes.attendanceStudents,
       page: () => const AttendanceStudentsScreen(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: Routes.teacherAttendance,
+      page: () => const TeacherAttendanceSelectionScreen(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: Routes.teacherAttendanceList,
+      page: () => const TeacherAttendanceListScreen(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: Routes.reportsMenu,
+      page: () => const ReportsMenuScreen(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: Routes.dailyAchievementReportSelection,
+      page: () => const DailyAchievementReportSelectionScreen(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: Routes.dailyAchievementReport,
+      page: () => const DailyAchievementReportScreen(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: Routes.attendanceReportSelection,
+      page: () => const AttendanceReportSelectionScreen(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: Routes.attendanceReport,
+      page: () => const AttendanceReportScreen(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: Routes.studentDetailReportSelection,
+      page: () => const StudentDetailReportSelectionScreen(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: Routes.studentDetailReport,
+      page: () => const StudentDetailReportScreen(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: Routes.lectureDetailReportSelection,
+      page: () => const LectureDetailReportSelectionScreen(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: Routes.lectureDetailReport,
+      page: () => const LectureDetailReportScreen(),
       middlewares: [AuthMiddleware()],
     ),
     GetPage(

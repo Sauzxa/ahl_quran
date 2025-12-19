@@ -30,6 +30,7 @@ class Achievement(Base):
         default=AchievementType.NORMAL,
         nullable=False
     )
+    date: Mapped[str] = mapped_column(String(10), nullable=False, index=True)  # Format: DD-MM-YYYY
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=lambda: datetime.now(timezone.utc))

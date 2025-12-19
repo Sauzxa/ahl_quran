@@ -17,6 +17,22 @@ class Routes {
   static const attendance = '/attendance';
   static const attendanceStudents = '/attendance/students';
 
+  static const teacherAttendance = '/teacher-attendance';
+  static const teacherAttendanceList = '/teacher-attendance/list';
+
+  static const reportsMenu = '/reports-menu';
+  static const dailyAchievementReportSelection =
+      '/daily-achievement-report-selection';
+  static const dailyAchievementReport = '/daily-achievement-report';
+  static const attendanceReportSelection = '/attendance-report-selection';
+  static const attendanceReport = '/attendance-report';
+  static const studentDetailReportSelection =
+      '/student-detail-report-selection';
+  static const studentDetailReport = '/student-detail-report';
+  static const lectureDetailReportSelection =
+      '/lecture-detail-report-selection';
+  static const lectureDetailReport = '/lecture-detail-report';
+
   static const examPage = '/exams';
   static const examRecords = '/exams/records';
   static const examNotes = '/exams/notes';

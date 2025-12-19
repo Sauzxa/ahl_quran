@@ -27,7 +27,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ahl_quran_user}:${POSTGRES_PASSWORD:-ahl_quran_password}@db:5432/${POSTGRES_DB:-ahl_quran_db}?client_encoding=utf8
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ahl_quran_user}:${POSTGRES_PASSWORD:-ahl_quran_password}@db:5432/${POSTGRES_DB:-ahl_quran_db}
     depends_on:
       db:
         condition: service_healthy
