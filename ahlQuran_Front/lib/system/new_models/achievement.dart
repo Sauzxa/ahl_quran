@@ -9,6 +9,7 @@ class Achievement {
   final int toVerse;
   final String? note;
   final String achievementType; // "normal", "small", "big"
+  final String date; // Format: DD-MM-YYYY
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -21,6 +22,7 @@ class Achievement {
     required this.toVerse,
     this.note,
     this.achievementType = 'normal',
+    required this.date,
     this.createdAt,
     this.updatedAt,
   });
@@ -35,6 +37,7 @@ class Achievement {
       toVerse: json['to_verse'],
       note: json['note'],
       achievementType: json['achievement_type'] ?? 'normal',
+      date: json['date'] ?? '',
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : null,
@@ -54,6 +57,7 @@ class Achievement {
       'to_verse': toVerse,
       'note': note,
       'achievement_type': achievementType,
+      'date': date,
       if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
     };
@@ -68,6 +72,7 @@ class Achievement {
     int? toVerse,
     String? note,
     String? achievementType,
+    String? date,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -80,6 +85,7 @@ class Achievement {
       toVerse: toVerse ?? this.toVerse,
       note: note ?? this.note,
       achievementType: achievementType ?? this.achievementType,
+      date: date ?? this.date,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

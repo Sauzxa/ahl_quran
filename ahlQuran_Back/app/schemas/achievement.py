@@ -20,6 +20,7 @@ class AchievementBase(BaseModel):
     to_verse: int = Field(..., gt=0, example=10)
     note: Optional[str] = Field(None, example="Good memorization")
     achievement_type: AchievementType = Field(default=AchievementType.NORMAL, example="normal")
+    date: str = Field(..., description="Date in DD-MM-YYYY format", example="19-12-2024")
 
 
 class AchievementCreate(AchievementBase):
@@ -33,6 +34,7 @@ class AchievementUpdate(BaseModel):
     to_verse: Optional[int] = Field(None, gt=0)
     note: Optional[str] = None
     achievement_type: Optional[AchievementType] = None
+    date: Optional[str] = Field(None, description="Date in DD-MM-YYYY format")
 
 
 class AchievementResponse(AchievementBase):

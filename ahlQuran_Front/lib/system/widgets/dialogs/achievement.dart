@@ -46,7 +46,7 @@ class _AchievementDialogState extends State<AchievementDialog>
       }
 
       final endpoint =
-          '${ApiEndpoints.getStudents}${widget.student.id}/achievements';
+          '${ApiEndpoints.getStudents}${widget.student.id}/achievements?date=${widget.date}';
       dev.log('Loading achievements from: $endpoint');
 
       final response = await ApiService.fetchList(
@@ -142,19 +142,28 @@ class _AchievementDialogState extends State<AchievementDialog>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          IconButton(
-            onPressed: () => Get.back(),
-            icon: const Icon(Icons.close, color: Colors.white),
-          ),
-          Text(
-            'إنجاز الطالب(ة): $studentName',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          const SizedBox(width: 48),
+          Expanded(
+            child: Text(
+              'إنجاز الطالب(ة): $studentName',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(width: 48),
+          IconButton(
+            onPressed: () {
+              try {
+                Get.back();
+              } catch (e) {
+                Navigator.of(context).pop();
+              }
+            },
+            icon: const Icon(Icons.close, color: Colors.white),
+          ),
         ],
       ),
     );
@@ -372,6 +381,7 @@ class _AchievementDialogState extends State<AchievementDialog>
       builder: (context) => AddAchievementDialog(
         studentId: widget.student.id!,
         achievementType: achievementType,
+        date: widget.date,
         onSuccess: _loadAchievements,
       ),
     );
@@ -460,12 +470,14 @@ class _AchievementDialogState extends State<AchievementDialog>
 class AddAchievementDialog extends StatefulWidget {
   final int studentId;
   final String achievementType;
+  final String date;
   final VoidCallback onSuccess;
 
   const AddAchievementDialog({
     super.key,
     required this.studentId,
     required this.achievementType,
+    required this.date,
     required this.onSuccess,
   });
 
@@ -676,6 +688,7 @@ class _AddAchievementDialogState extends State<AddAchievementDialog> {
         toVerse: toVerse!,
         note: noteController.text.isEmpty ? null : noteController.text,
         achievementType: widget.achievementType,
+        date: widget.date, // Use the date passed from parent
       );
 
       await ApiService.post(
@@ -685,8 +698,9 @@ class _AddAchievementDialogState extends State<AddAchievementDialog> {
       );
 
       if (mounted) {
-        showSuccessSnackbar('تم إضافة الإنجاز بنجاح', context: context);
         Navigator.pop(context);
+        showSuccessSnackbar('تم إضافة الإنجاز بنجاح', context: context);
+        // Call onSuccess after closing dialog to reload achievements
         widget.onSuccess();
       }
     } catch (e) {
