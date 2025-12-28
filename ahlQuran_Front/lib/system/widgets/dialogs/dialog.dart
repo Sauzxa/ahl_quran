@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/form_controller.dart'
     as form;
 import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/generic_edit_controller.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/utils/snackbar_helper.dart';
 import 'common/dialog_header.dart';
 import 'common/dialog_submit_button.dart';
 
@@ -176,8 +177,7 @@ abstract class DialogState<GEC extends GenericEditController>
         isComplete.value = true;
       }
     } else {
-      Get.snackbar('Error', 'Please fill out all required fields',
-          snackPosition: SnackPosition.BOTTOM);
+      showErrorSnackbar('الرجاء ملء جميع الحقول المطلوبة');
       isComplete.value = true;
     }
   }

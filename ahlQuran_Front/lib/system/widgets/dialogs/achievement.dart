@@ -382,6 +382,7 @@ class _AchievementDialogState extends State<AchievementDialog>
         studentId: widget.student.id!,
         achievementType: achievementType,
         date: widget.date,
+        existingAchievements: achievements,
         onSuccess: _loadAchievements,
       ),
     );
@@ -471,6 +472,7 @@ class AddAchievementDialog extends StatefulWidget {
   final int studentId;
   final String achievementType;
   final String date;
+  final List<Achievement> existingAchievements;
   final VoidCallback onSuccess;
 
   const AddAchievementDialog({
@@ -478,6 +480,7 @@ class AddAchievementDialog extends StatefulWidget {
     required this.studentId,
     required this.achievementType,
     required this.date,
+    required this.existingAchievements,
     required this.onSuccess,
   });
 
@@ -675,25 +678,38 @@ class _AddAchievementDialogState extends State<AddAchievementDialog> {
       return;
     }
 
+    // Prevent reversing verses within the same chapter
+    if (fromSurah!.number == toSurah!.number && fromVerse! > toVerse!) {
+      _showTopErrorMessage('لا يمكن عكس الآيات في نفس السورة');
+      return;
+    }
+
+    // Create temporary achievement for overlap checking
+    final newAchievement = Achievement(
+      studentId: widget.studentId,
+      fromSurah: fromSurah!.number,
+      toSurah: toSurah!.number,
+      fromVerse: fromVerse!,
+      toVerse: toVerse!,
+      note: noteController.text.isEmpty ? null : noteController.text,
+      achievementType: widget.achievementType,
+      date: widget.date,
+    );
+
+    // Check for overlap only for 'normal' (حفظ) type
+    if (_checkOverlap(newAchievement, widget.existingAchievements)) {
+      _showTopErrorMessage('يوجد تداخل مع إنجاز حفظ موجود مسبقاً');
+      return;
+    }
+
     setState(() {
       isSubmitting = true;
     });
 
     try {
-      final achievement = Achievement(
-        studentId: widget.studentId,
-        fromSurah: fromSurah!.number, // Send chapter number instead of name
-        toSurah: toSurah!.number, // Send chapter number instead of name
-        fromVerse: fromVerse!,
-        toVerse: toVerse!,
-        note: noteController.text.isEmpty ? null : noteController.text,
-        achievementType: widget.achievementType,
-        date: widget.date, // Use the date passed from parent
-      );
-
       await ApiService.post(
         '${ApiEndpoints.getStudents}${widget.studentId}/achievements',
-        achievement.toJson(),
+        newAchievement.toJson(),
         Achievement.fromJson,
       );
 
@@ -715,6 +731,108 @@ class _AddAchievementDialogState extends State<AddAchievementDialog> {
         });
       }
     }
+  }
+
+  void _showTopErrorMessage(String message) {
+    final overlay = Overlay.of(context);
+    final overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: 50,
+        left: 20,
+        right: 20,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.red.shade600,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay.insert(overlayEntry);
+    Future.delayed(const Duration(seconds: 3), () {
+      overlayEntry.remove();
+    });
+  }
+
+  bool _checkOverlap(
+      Achievement newAchievement, List<Achievement> existingAchievements) {
+    // Only check for 'normal' (حفظ) type
+    if (newAchievement.achievementType != 'normal') {
+      return false;
+    }
+
+    // Filter existing achievements to only check 'normal' type
+    final normalAchievements = existingAchievements
+        .where((a) => a.achievementType == 'normal')
+        .toList();
+
+    for (var existing in normalAchievements) {
+      // Convert to absolute verse positions for easier comparison
+      int newStart = _getAbsoluteVersePosition(
+        newAchievement.fromSurah,
+        newAchievement.fromVerse,
+      );
+      int newEnd = _getAbsoluteVersePosition(
+        newAchievement.toSurah,
+        newAchievement.toVerse,
+      );
+      int existingStart = _getAbsoluteVersePosition(
+        existing.fromSurah,
+        existing.fromVerse,
+      );
+      int existingEnd = _getAbsoluteVersePosition(
+        existing.toSurah,
+        existing.toVerse,
+      );
+
+      // Check if ranges overlap
+      if (!(newEnd < existingStart || newStart > existingEnd)) {
+        return true; // Overlap detected
+      }
+    }
+
+    return false; // No overlap
+  }
+
+  int _getAbsoluteVersePosition(int surahNumber, int verseNumber) {
+    // Calculate absolute position by summing all verses before this surah
+    // plus the verse number in current surah
+    int position = 0;
+    for (int i = 1; i < surahNumber; i++) {
+      final surah = getSurahByNumber(i);
+      if (surah != null) {
+        position += surah.numberOfAyahs;
+      }
+    }
+    position += verseNumber;
+    return position;
   }
 
   @override

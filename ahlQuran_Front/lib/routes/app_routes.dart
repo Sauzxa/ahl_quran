@@ -21,6 +21,11 @@ class Routes {
   static const teacherAttendanceList = '/teacher-attendance/list';
 
   static const reportsMenu = '/reports-menu';
+  static const chartsMenu = '/charts';
+  static const achievementStatsSelection = '/achievement-stats-selection';
+  static const attendanceStatsSelection = '/attendance-stats-selection';
+  static const progressStatsSelection = '/progress-stats-selection';
+  static const lectureStatsSelection = '/lecture-stats-selection';
   static const dailyAchievementReportSelection =
       '/daily-achievement-report-selection';
   static const dailyAchievementReport = '/daily-achievement-report';
@@ -45,6 +50,10 @@ class Routes {
   static const report4 = '/report4';
 
   static const stat1 = '/stat1';
+  static const achievementStats = '/achievement-stats';
+  static const attendanceStats = '/attendance-stats';
+  static const progressStats = '/progress-stats';
+  static const lectureStats = '/lecture-stats';
   static const stat2 = '/stat2';
   static const stat3 = '/stat3';
 

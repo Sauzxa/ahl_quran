@@ -120,9 +120,13 @@ class _TrackMemorizeStudentsScreenState
             Achievement.fromJson,
           );
 
-          if (achievements.isNotEmpty) {
-            // Get the latest achievement (first one, as they're ordered by created_at desc)
-            latestAchievements[student.id!] = achievements.first;
+          // Filter to only 'normal' (حفظ) type achievements
+          final normalAchievements =
+              achievements.where((a) => a.achievementType == 'normal').toList();
+
+          if (normalAchievements.isNotEmpty) {
+            // Get the latest 'normal' achievement (first one, as they're ordered by created_at desc)
+            latestAchievements[student.id!] = normalAchievements.first;
           } else {
             latestAchievements[student.id!] = null;
           }

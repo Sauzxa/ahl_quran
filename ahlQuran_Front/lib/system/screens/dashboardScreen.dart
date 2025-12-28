@@ -7,7 +7,6 @@ import './base_layout.dart';
 
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_teachers.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/track_and_memorize_screen.dart';
-import 'package:the_doctarine_of_the_ppl_of_the_quran/stats/stat1.dart';
 
 import 'package:the_doctarine_of_the_ppl_of_the_quran/routes/app_routes.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/services/api_client.dart';
@@ -126,7 +125,7 @@ class _DashboardPageState extends State<DashboardPage> {
         label: 'الإحصاءات',
         icon: Icons.bar_chart,
         bigIcon: Icons.bar_chart_outlined,
-        page: () => StudentProgressChartScreen(),
+        route: Routes.chartsMenu,
       ),
       DashboardTileConfig(
         label: 'الخطط والمقررات',
