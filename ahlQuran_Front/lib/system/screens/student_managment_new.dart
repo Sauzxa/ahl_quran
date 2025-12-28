@@ -458,16 +458,11 @@ class StudentManagementScreen extends GetView<StudentManagementController> {
     );
 
     if (result == true) {
-      // Show success snackbar
-      Get.snackbar(
-        'نجح',
-        'تم إضافة الطالب بنجاح',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 2),
-      );
-
       // Refresh the student list
       controller.fetchAllStudents();
+
+      // Show success snackbar (helper will handle timing)
+      showSuccessSnackbar('تم إضافة الطالب بنجاح');
     }
   }
 
@@ -489,16 +484,11 @@ class StudentManagementScreen extends GetView<StudentManagementController> {
       barrierDismissible: false,
     ).then((result) {
       if (result == true) {
-        // Show success snackbar
-        Get.snackbar(
-          'نجح',
-          'تم تحديث بيانات الطالب بنجاح',
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 2),
-        );
-
         // Refresh the student list
         controller.fetchAllStudents();
+
+        // Show success snackbar (helper will handle timing)
+        showSuccessSnackbar('تم تحديث بيانات الطالب بنجاح');
       }
 
       // Clean up the controller
