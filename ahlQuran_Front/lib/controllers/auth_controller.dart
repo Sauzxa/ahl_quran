@@ -16,8 +16,15 @@ class AuthController extends GetxController {
   final emailController = TextEditingController();
   final schoolNameController = TextEditingController();
   final phoneNumberController = TextEditingController();
+
   // Default to president for registration/login
   final selectedRole = 'president'.obs;
+  final isLoading = false.obs;
+  final isPasswordVisible = false.obs;
+
+  void togglePasswordVisibility() {
+    isPasswordVisible.value = !isPasswordVisible.value;
+  }
 
   void signup() async {
     final firstname = firstnameController.text;
@@ -91,20 +98,17 @@ class AuthController extends GetxController {
   }
 
   void login() async {
-    final email = usernameController.text;
+    final email = usernameController.text.trim();
     final password = passwordController.text;
     final role = selectedRole.value;
 
     if (email.isEmpty || password.isEmpty) {
-      Get.snackbar(
-        'حقول مطلوبة',
-        'يرجى ملء جميع الحقول المطلوبة',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Get.theme.colorScheme.error,
-        colorText: Get.theme.colorScheme.onError,
-      );
+      showErrorSnackbar('يرجى ملء جميع الحقول المطلوبة');
       return;
     }
+
+    // Set loading state
+    isLoading.value = true;
 
     try {
       // Check if this is an admin login based on selected role
@@ -231,23 +235,15 @@ class AuthController extends GetxController {
       } else {
         // Error - parse and clean the response
         String errorMsg = _parseErrorMessage(response.body);
-        Get.snackbar(
-          'خطأ في تسجيل الدخول',
-          errorMsg,
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Get.theme.colorScheme.error,
-          colorText: Get.theme.colorScheme.onError,
-        );
+        showErrorSnackbar(errorMsg);
       }
     } catch (e) {
       print('Login error: $e');
-      Get.snackbar(
-        'خطأ في الاتصال',
-        'فشل الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Get.theme.colorScheme.error,
-        colorText: Get.theme.colorScheme.onError,
-      );
+      showErrorSnackbar(
+          'فشل الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت.');
+    } finally {
+      // Reset loading state
+      isLoading.value = false;
     }
   }
 
@@ -256,7 +252,19 @@ class AuthController extends GetxController {
     try {
       // Try to parse as JSON first
       final data = jsonDecode(responseBody);
-      return data['error'] ?? 'حدث خطأ غير متوقع';
+
+      // Check for common error keys
+      if (data['detail'] != null) {
+        return _translateErrorMessage(data['detail'].toString());
+      }
+      if (data['error'] != null) {
+        return _translateErrorMessage(data['error'].toString());
+      }
+      if (data['message'] != null) {
+        return _translateErrorMessage(data['message'].toString());
+      }
+
+      return 'حدث خطأ غير متوقع';
     } catch (e) {
       // If JSON parsing fails, it might be HTML error
       // Clean HTML tags and extract meaningful message
@@ -274,6 +282,39 @@ class AuthController extends GetxController {
 
       return cleaned.isNotEmpty ? cleaned : 'حدث خطأ غير متوقع';
     }
+  }
+
+  // Translate common error messages to Arabic
+  String _translateErrorMessage(String message) {
+    final lowerMessage = message.toLowerCase();
+
+    if (lowerMessage.contains('invalid credentials') ||
+        lowerMessage.contains('incorrect') ||
+        lowerMessage.contains('wrong password') ||
+        lowerMessage.contains('invalid email or password')) {
+      return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+    }
+
+    if (lowerMessage.contains('user not found') ||
+        lowerMessage.contains('account not found')) {
+      return 'الحساب غير موجود';
+    }
+
+    if (lowerMessage.contains('account is inactive') ||
+        lowerMessage.contains('not active')) {
+      return 'حسابك غير نشط. يرجى انتظار موافقة المسؤول';
+    }
+
+    if (lowerMessage.contains('account is disabled')) {
+      return 'تم تعطيل حسابك. يرجى التواصل مع المسؤول';
+    }
+
+    if (lowerMessage.contains('too many attempts')) {
+      return 'محاولات تسجيل دخول كثيرة. يرجى المحاولة لاحقاً';
+    }
+
+    // Return original message if no translation found
+    return message;
   }
 
   Future<void> logout() async {

@@ -1,29 +1,30 @@
 from pydantic import BaseModel, EmailStr, Field
+from datetime import datetime
+from typing import Optional
 
 class SupervisorBase(BaseModel):
-    email: EmailStr
-    password: str = Field(..., min_length=6)
-
-class SupervisorCreate(SupervisorBase):
     firstname: str
     lastname: str
     email: EmailStr
-    password: str
 
-class SupervisorInDB(SupervisorBase):
+class SupervisorCreate(SupervisorBase):
+    password: str = Field(..., min_length=6)
+
+class SupervisorUpdate(BaseModel):
+    firstname: Optional[str] = None
+    lastname: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password: Optional[str] = Field(None, min_length=6)
+
+class SupervisorResponse(SupervisorBase):
     id: int
-    is_active: bool = True
+    user_id: int
+    is_active: bool
+    created_at: datetime
 
     class Config:
-        orm_mode = True
-
-class SupervisorResponse(BaseModel):
-    pass
-
-
-class SupervisorApproval(BaseModel):
-    supervisor_id: int
-    approved: bool
+        from_attributes = True
 
 class SupervisorList(BaseModel):
-    supervisors: list[SupervisorInDB]
+    supervisors: list[SupervisorResponse]
+    total: int

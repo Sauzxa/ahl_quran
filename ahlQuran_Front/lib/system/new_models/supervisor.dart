@@ -1,41 +1,50 @@
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/new_models/model.dart';
 
 class Supervisor implements Model {
-  dynamic supervisorId;
-  dynamic firstName;
-  dynamic lastName;
-  dynamic supervisorAccountId;
-  dynamic profileImage;
+  final int? id;
+  final int? userId;
+  final String? firstname;
+  final String? lastname;
+  final String? email;
+  final bool? isActive;
+  final DateTime? createdAt;
 
   Supervisor({
-    this.supervisorId,
-    this.firstName,
-    this.lastName,
-    this.supervisorAccountId,
-    this.profileImage,
+    this.id,
+    this.userId,
+    this.firstname,
+    this.lastname,
+    this.email,
+    this.isActive,
+    this.createdAt,
   });
 
   factory Supervisor.fromJson(Map<String, dynamic> json) => Supervisor(
-        supervisorId: json['supervisor_id'],
-        firstName: json['first_name'],
-        lastName: json['last_name'],
-        supervisorAccountId: json['supervisor_account_id'],
-        profileImage: json['profile_image'],
+        id: json['id'],
+        userId: json['user_id'],
+        firstname: json['firstname'],
+        lastname: json['lastname'],
+        email: json['email'],
+        isActive: json['is_active'] ?? true,
+        createdAt: json['created_at'] != null
+            ? DateTime.parse(json['created_at'])
+            : null,
       );
 
   @override
   Map<String, dynamic> toJson() => {
-        'supervisor_id': supervisorId,
-        'first_name': firstName,
-        'last_name': lastName,
-        'supervisor_account_id': supervisorAccountId,
-        'profile_image': profileImage,
+        'id': id,
+        'user_id': userId,
+        'firstname': firstname,
+        'lastname': lastname,
+        'email': email,
+        'is_active': isActive,
+        'created_at': createdAt?.toIso8601String(),
       };
 
   @override
   bool get isComplete =>
-      supervisorId != null &&
-      firstName != null &&
-      lastName != null &&
-      supervisorAccountId != null;
+      id != null && firstname != null && lastname != null && email != null;
+
+  String get fullName => '${firstname ?? ''} ${lastname ?? ''}'.trim();
 }

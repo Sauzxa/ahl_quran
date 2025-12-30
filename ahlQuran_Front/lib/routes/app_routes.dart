@@ -11,6 +11,7 @@ class Routes {
   static const addTeacher = '/add_teacher';
   static const addLecture = '/add_lecture';
   static const addAchievement = '/add_achievement';
+  static const supervisorManagement = '/supervisor-management';
   static const trackAndMemorize = '/trackandmemorize';
   static const trackAndMemorizeStudents = '/trackandmemorize/students';
 

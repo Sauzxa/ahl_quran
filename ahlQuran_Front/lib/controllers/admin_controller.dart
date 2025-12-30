@@ -167,16 +167,8 @@ class AdminController extends GetxController {
       adminToken.value = '';
       pendingPresidents.clear();
 
-      // Navigate to login page
+      // Navigate to login page (no snackbar needed as user is leaving the page)
       Get.offAllNamed(Routes.logIn);
-
-      Get.snackbar(
-        'تم تسجيل الخروج',
-        'تم تسجيل الخروج بنجاح',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Get.theme.colorScheme.primary,
-        colorText: Get.theme.colorScheme.onPrimary,
-      );
     } catch (e) {
       print('Logout error: $e');
     }

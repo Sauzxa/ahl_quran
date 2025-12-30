@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:developer' as dev;
+import 'package:get/get.dart';
 
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/dashboardtile.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/header.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/profile_controller.dart';
 import './base_layout.dart';
 
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_teachers.dart';
@@ -62,7 +64,14 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   List<DashboardTileConfig> _getTiles() {
-    return [
+    // Get user role from ProfileController
+    final profileController = Get.find<ProfileController>();
+    final userRole = profileController.userRole.value.toLowerCase();
+
+    // Check if user is president or admin
+    final canManageSupervisors = userRole == 'president' || userRole == 'admin';
+
+    final allTiles = [
       DashboardTileConfig(
         label: 'الطلاب',
         count: studentsCount.toString(),
@@ -103,12 +112,14 @@ class _DashboardPageState extends State<DashboardPage> {
         bigIcon: Icons.event,
         route: Routes.teacherAttendance,
       ),
-      DashboardTileConfig(
-        label: 'حضور الموظفين',
-        icon: Icons.event_note,
-        bigIcon: Icons.event_note,
-        page: () => const SizedBox.shrink(), // Placeholder
-      ),
+      // Only show supervisor management for presidents and admins
+      if (canManageSupervisors)
+        DashboardTileConfig(
+          label: 'تسيير المشرفين',
+          icon: Icons.event_note,
+          bigIcon: Icons.event_note,
+          route: Routes.supervisorManagement,
+        ),
       DashboardTileConfig(
         label: 'الحفظ والمراجعة',
         icon: Icons.check_box,
@@ -140,6 +151,8 @@ class _DashboardPageState extends State<DashboardPage> {
         page: () => const SizedBox.shrink(), // Placeholder
       ),
     ];
+
+    return allTiles;
   }
 
   @override

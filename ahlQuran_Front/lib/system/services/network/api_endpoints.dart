@@ -133,8 +133,8 @@ class ApiEndpoints {
       '$baseUrl/subscriptioninfos/$id';
 
   // Supervisor endpoints
-  static final String getSupervisors = '$baseUrl/supervisors';
-  static String getSupervisorById(int id) => '$baseUrl/supervisors/$id';
+  static final String getSupervisors = '$baseUrl/supervisor';
+  static String getSupervisorById(int id) => '$baseUrl/supervisor/$id';
 
   // Teacher endpoints
   static final String getTeachers = '$baseUrl/teacher';

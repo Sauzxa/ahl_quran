@@ -8,6 +8,7 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/student_managemen
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/guardian_management_binding.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/lecture_management_binding.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/teacher_management_binding.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/supervisor_management_binding.dart';
 //import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/starter.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/charts/stat1_binding.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/bindings/charts/stat2_binding.dart';
@@ -29,6 +30,7 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/student_man
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/guardian_management_new.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/lecture_management_new.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/teacher_management_new.dart';
+import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/supervisor_management_new.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/achievement_managment.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/login.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/admin_dashboard.dart';
@@ -84,6 +86,7 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/web/pages/home.dart';
 
 import 'package:the_doctarine_of_the_ppl_of_the_quran/web/pages/pricing.dart';
 import '../middleware/auth_middleware.dart';
+import '../middleware/president_middleware.dart';
 
 class AppScreens {
   static final routes = [
@@ -112,6 +115,12 @@ class AppScreens {
       name: Routes.addTeacher,
       page: () => const TeacherManagementScreen(),
       binding: TeacherManagementBinding(),
+    ),
+    GetPage(
+      name: Routes.supervisorManagement,
+      page: () => const SupervisorManagementScreen(),
+      binding: SupervisorManagementBinding(),
+      middlewares: [AuthMiddleware(), PresidentMiddleware()],
     ),
     GetPage(
       name: Routes.addLecture,

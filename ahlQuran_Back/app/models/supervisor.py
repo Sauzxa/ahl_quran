@@ -31,4 +31,4 @@ class Supervisor(Base):
     )
     
     def __repr__(self) -> str:
-        return f"Supervisor(id={self.id}, department={self.department})"
+        return f"Supervisor(id={self.id}, user_id={self.user_id})"

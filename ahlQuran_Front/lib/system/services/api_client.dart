@@ -50,7 +50,7 @@ class ApiService {
   static Future<void> _checkConnectivity() async {
     final result = await Connectivity().checkConnectivity();
 
-    if (result == ConnectivityResult.none) {
+    if (result.contains(ConnectivityResult.none) || result.isEmpty) {
       throw NoNetworkException();
     }
   }
