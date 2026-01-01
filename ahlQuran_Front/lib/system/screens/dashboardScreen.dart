@@ -7,7 +7,6 @@ import 'package:the_doctarine_of_the_ppl_of_the_quran/system/widgets/header.dart
 import 'package:the_doctarine_of_the_ppl_of_the_quran/controllers/profile_controller.dart';
 import './base_layout.dart';
 
-import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/exams/exam_teachers.dart';
 import 'package:the_doctarine_of_the_ppl_of_the_quran/system/screens/track_and_memorize_screen.dart';
 
 import 'package:the_doctarine_of_the_ppl_of_the_quran/routes/app_routes.dart';
@@ -84,7 +83,7 @@ class _DashboardPageState extends State<DashboardPage> {
         count: teachersCount.toString(),
         icon: Icons.people_outline,
         bigIcon: Icons.people_outline,
-        page: () => const ExamTeachers(),
+        route: Routes.addTeacher,
       ),
       DashboardTileConfig(
         label: 'الحلقات',
